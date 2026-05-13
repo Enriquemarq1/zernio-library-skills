@@ -127,6 +127,7 @@ You can also call the bare bash flow without Claude — see `scripts/post.sh`.
 ```
 zernio-library-skills/
 ├── README.md                                         ← you are here
+├── CLAUDE.md                                         ← unified context for AI agents in this project
 ├── LICENSE                                           ← MIT
 ├── .claude/
 │   ├── commands/
