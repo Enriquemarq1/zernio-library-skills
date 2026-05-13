@@ -17,9 +17,20 @@ if [[ -z "$MANIFEST" || ! -f "$MANIFEST" ]]; then
   exit 2
 fi
 
-if [[ -z "${ZERNIO_API_KEY:-}" ]]; then
-  echo "ZERNIO_API_KEY is not set. Export it first:" >&2
-  echo "  export ZERNIO_API_KEY='zk_xxx'" >&2
+# Auto-source .env if it sits next to the manifest or at the repo root —
+# convenience for CLI users who don't want to export every shell session.
+for envfile in "$(dirname "$MANIFEST")/.env" "./.env"; do
+  if [[ -z "${ZERNIO_API_KEY:-}" && -f "$envfile" ]]; then
+    set -a; source "$envfile"; set +a
+    break
+  fi
+done
+
+if [[ -z "${ZERNIO_API_KEY:-}" || "$ZERNIO_API_KEY" == "zk_replace_with_your_real_key" ]]; then
+  echo "ZERNIO_API_KEY is not set." >&2
+  echo "  Option 1: cp .env.example .env  (then edit .env with your real key)" >&2
+  echo "  Option 2: export ZERNIO_API_KEY='zk_xxx'" >&2
+  echo "Get your key at https://zernio.com/dashboard/api-keys" >&2
   exit 2
 fi
 
