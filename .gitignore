@@ -1,0 +1,25 @@
+# Local post logs
+posts/
+*.log
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Secrets (never commit)
+.env
+.env.local
+.env.keys
+*.pem
+*.key
+
+# Manifest staging (creators may stage drafts here)
+drafts/
+
+# Node / Python by-products (in case anyone scripts around this repo)
+node_modules/
+__pycache__/
+*.pyc

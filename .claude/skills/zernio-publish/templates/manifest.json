@@ -1,0 +1,88 @@
+{
+  "$schema": "Manifest contract for zernio-publish — author your post once, ship to N platforms.",
+
+  "slug": "my-post-2026-05-12",
+  "_slug_help": "Filename-safe identifier for ./posts/ logging. Date-prefix is conventional but optional.",
+
+  "content": "The default caption/description shared across platforms. Platforms can override via customContent in the per-platform entry. Keep this under the strictest platform's limit you're targeting (Twitter 280 if you publish to Twitter without customContent).",
+  "_content_help": "Top-level content = caption / description / post body across every platform.",
+
+  "media": {
+    "video": "./output.mp4",
+    "thumbnail": "./thumb.jpg",
+    "_help": "video is optional (text-only posts skip it). thumbnail required for YouTube + Pinterest + Facebook video. Must be JPEG."
+  },
+
+  "scheduledFor": "auto",
+  "_scheduledFor_help": "ISO 8601 datetime, or 'auto' for now+3min. NEVER use publishNow:true for multi-platform — causes timeouts and duplicates.",
+
+  "platforms": {
+    "youtube": {
+      "title": "Video title (under 100 chars)",
+      "categoryId": "28",
+      "visibility": "public",
+      "tags": "comma,separated,no,spaces",
+      "firstComment": "Engagement question + your CTA — MUST be in the create call.",
+      "madeForKids": false
+    },
+
+    "instagram": {
+      "visibility": "public",
+      "firstComment": "Follow-up question or second-line hook."
+    },
+
+    "tiktok": {
+      "visibility": "public"
+    },
+
+    "linkedin": {
+      "visibility": "public",
+      "firstComment": "Optional engagement prompt."
+    },
+
+    "twitter": {
+      "visibility": "public",
+      "customContent": "Twitter-specific text (280 chars or 4000 with Blue). Overrides top-level content for this platform only."
+    },
+
+    "threads": {
+      "visibility": "public",
+      "customContent": "Threads-specific text (500 chars max)."
+    },
+
+    "facebook": {
+      "visibility": "public"
+    },
+
+    "bluesky": {
+      "visibility": "public",
+      "customContent": "Bluesky-specific text (300 chars max)."
+    },
+
+    "reddit": {
+      "title": "Reddit post title (300 chars max, this IS the hook)",
+      "subreddit": "r/example",
+      "visibility": "public"
+    },
+
+    "pinterest": {
+      "title": "Pin title (100 chars max)",
+      "boardId": "your-board-id",
+      "visibility": "public"
+    },
+
+    "googlebusiness": {
+      "visibility": "public"
+    },
+
+    "telegram": {
+      "visibility": "public"
+    },
+
+    "snapchat": {
+      "visibility": "public"
+    }
+  },
+
+  "_platforms_help": "Include ONLY the platforms you want to publish to. Each platform's required fields are documented in reference/platforms/{platform}.md. Fields with `customContent` override the top-level content for that platform only."
+}
