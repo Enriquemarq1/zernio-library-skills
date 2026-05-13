@@ -3,114 +3,73 @@ name: zernio-publish
 description: "Ship a content piece to one or many of 13 social platforms through Zernio. Handles media upload, per-platform post bodies, scheduled posting, verification, and logging. Use when the user wants to publish, post, ship, schedule, or distribute content."
 ---
 
-# Skill: zernio-publish
+# zernio-publish
 
-This skill is **support material** for shipping content via Zernio. You — the agent — are the actor. Read what's useful here, adapt to the user's situation, and use your judgment.
+This skill is knowledge about Zernio — endpoints, platform quirks, gotchas — for when you're shipping content for a user. You're the agent doing the shipping. The skill is your reference.
 
-The skill covers 13 platforms: YouTube, Instagram, TikTok, LinkedIn, X/Twitter, Threads, Facebook, Pinterest, Bluesky, Reddit, Snapchat, Telegram, Google Business.
+Platforms covered: YouTube, Instagram, TikTok, LinkedIn, X/Twitter, Threads, Facebook, Pinterest, Bluesky, Reddit, Snapchat, Telegram, Google Business.
 
----
+## How this works in practice
 
-## How to talk to the user
+The user tells you what to ship and where, in whatever form is natural — a sentence, a folder, a Drive link, a caption pasted in chat. You gather:
 
-Lead with the most pressing thing they need, not a status report of everything missing. One thing at a time. Friendly, conversational.
+- **What they want to say** — captions, titles, hashtags, first comments. From the user, in chat or in a file they pointed at. You write nothing they didn't give you.
+- **What media to ship** — a video file, an image, a carousel. On disk by the time you POST. If they gave you a Drive link or a URL, download it with `curl -L` or your Drive tools. Files over 50 MB need the external-storage fallback (`reference/zernio-upload.md`) because of Zernio's CRC32 bug.
+- **Which platforms** — they tell you. You resolve each platform's `accountId` at runtime via `GET /v1/accounts`. If a platform isn't connected in Zernio, the API tells you, and you tell the user (so they can connect it in the Zernio dashboard).
+- **The API key** — `$ZERNIO_API_KEY` env var, or auto-source `.env` at the project root if the value isn't the placeholder `zk_replace_with_your_real_key`. On claude.ai web (no shell), ask the user once to paste it.
 
-- **Don't enumerate blockers.** A six-item "what's missing" list is a wall. Pick the single biggest gap, address it, then move to the next one.
-- **Don't quote rules at the user.** Internalize the hard rules below — don't paste them back as a justification for not helping.
-- **Reuse what's there.** If `examples/sample-post.json` exists, offer it as a starting point. If `.env` has a placeholder, walk the user through filling it.
-- **Out-of-scope ≠ refusal.** When the user asks for something the skill doesn't do (rendering video from images, generating captions), say what they need to do first and offer to come back. Don't make them feel wrong for asking.
+You assemble all of this into a Zernio POST body internally — see `reference/zernio-post.md` for the exact shape and the 10 field placement rules. The user doesn't need to write JSON.
 
-## Hard rules
+## The flow that works
 
-Internalize these. Don't quote them back at the user. Don't list them as blockers.
+**CHECK** — Confirm quietly what you have. If one critical thing is missing (caption, media, key), ask about that one thing. Don't list everything that isn't ready.
 
-1. **Never publish without explicit human approval.** Show the package. Wait for "ship it" / "post" / "approved."
-2. **Always verify after posting.** Zernio 200 OK ≠ landed on the platform.
-3. **`scheduledFor` 2-3 min ahead for multi-platform**, never `publishNow: true`.
-4. **Zernio only.** Never reach for Late MCP, Buffer, Hootsuite, n8n, or any alternative.
-5. **You write nothing the user didn't say.** Captions, titles, tags, thumbnails — all come from the user (chat, manifest, or a draft they pointed at). If something's missing, ask the user — don't invent.
+**UPLOAD** — For each media file: presign with `/v1/media/presign` (lowercase `filename` / `contentType` in the body), PUT with `--tls-max 1.2`, HEAD-verify the public URL returns 200. JPEG thumbnails only — convert PNGs with `ffmpeg -i thumb.png -q:v 2 thumb.jpg`. See `reference/zernio-upload.md` for the full flow + the >50 MB workaround.
 
----
+**BUILD** — Assemble the POST body. The 10 placement rules in `reference/zernio-post.md` are mistakes that silently break the post — get them right: top-level `content` is the caption everywhere; `platformSpecificData` is flat per platform (not nested under platform name); `tags` is a comma-separated string (not JSON array); `thumbnail` is a plain URL string (not an object); `firstComment` must be in the create call (cannot be added after).
 
-## What you have to work with
+**APPROVE** — Show the user the full package: platforms, schedule, the caption preview per platform, media URLs, first comment. Wait for an explicit OK — "ship it," "post," "approved." If they ask for changes, apply them and re-show the package. Silence is never approval.
 
-**Inputs the user might give you:**
+**POST** — `POST https://zernio.com/api/v1/posts` with the body. Use `scheduledFor` 2-3 minutes ahead for any multi-platform post. Never `publishNow: true` for multi-platform — it causes 30-second response times and duplicate posts.
 
-- A path to a `manifest.json` (structured input)
-- A chat message describing what to post, where, when
-- A messy mix — caption pasted in chat, media file path, "post this to LinkedIn and Twitter"
-- Nothing — they typed `/zernio-post` cold
+**VERIFY** — After `scheduledFor + 60s`, hit the destination platform directly:
+- YouTube → `GET https://www.youtube.com/oembed?url={video_url}&format=json` to confirm title and thumbnail rendered
+- Others → HEAD the public URL with `curl -I`; 200 is a soft success
 
-Whatever shape it's in, assemble what you need to make the Zernio API call. The manifest is an internal data structure — you can build it from chat. If the user has one, use it. If not, ask for the pieces you need.
+If a field dropped (YouTube routinely strips title/tags/thumbnail silently), name the field and tell the user. Don't report success on a post that didn't fully land.
 
-**Tools / files:**
+**LOG** — Write `./posts/YYYY-MM-DD-{slug}.json` with the full Zernio response + per-platform verification verdict + ISO timestamp.
 
-- `templates/manifest.json` — the schema with inline help, useful as a reference
-- `examples/sample-post.json` — a worked example
-- `reference/zernio-api.md` — endpoints, auth, account model
-- `reference/zernio-upload.md` — presign → PUT → HEAD, the 50 MB CRC32 workaround
-- `reference/zernio-post.md` — POST body shape, 10 field placement rules
-- `reference/platforms/{platform}.md` — per-platform deep dives (13 files)
-- `reference/platforms.md` — capability matrix across all 13
-- `reference/zernio-openapi.yaml` — canonical 17K-line OpenAPI spec (source of truth if other docs disagree)
+## What this skill doesn't do (but you might still help with)
 
----
+Some things this skill isn't about, but you're still a Claude Code agent — use your other tools:
 
-## API key
+- **Render a video from images.** Not Zernio's job, but `ffmpeg` is probably installed. Suggest the command, or run it yourself if the user wants you to.
+  ```bash
+  ffmpeg -framerate 1/4 -i "slide_%02d.jpg" -c:v libx264 \
+    -vf "scale=1080:1920,setsar=1" -pix_fmt yuv420p -r 30 out.mp4
+  ```
+- **Download media from a URL or Drive link.** Use `curl -L "<url>" -o file.ext`. For Drive, the share link can be converted to a direct download: `https://drive.google.com/uc?export=download&id=<FILE_ID>`.
+- **Write captions.** You don't invent them from nothing — but if the user said "make it about X," you can draft from what they said, show them, ask for edits. They give you the words; you arrange them.
 
-The key never lives in this skill, the manifest, or any committed file. Resolution differs by runtime:
+What you genuinely can't do without the user: connect a new Zernio account (that's in the Zernio dashboard at zernio.com), get a Zernio API key (also dashboard), or read their private Drive folder without authentication or a shared link.
 
-- **Claude Code CLI:** `$ZERNIO_API_KEY` env var, or source `.env` at the project root if present and the value isn't the placeholder `zk_replace_with_your_real_key`. Get one at https://zernio.com/dashboard/api-keys.
-- **Claude.ai web:** ask the user to paste the key in chat at the start; hold it in conversation memory; never echo it back; never write it to a file.
+## Hard rules — internalize them, don't quote them at the user
 
-If the key isn't resolvable, ask once, kindly. Don't list it as a blocker.
+- Never publish without an explicit human "ship it."
+- Always verify after posting. Zernio 200 OK ≠ landed.
+- `scheduledFor` 2-3 min ahead. Never `publishNow` for multi-platform.
+- Zernio only. Never reach for Late MCP, Buffer, Hootsuite, n8n, or any alternative.
+- You write nothing the user didn't say. Captions / titles / tags / thumbnails come from them — by chat, file, or pointer. If something's genuinely missing, ask about that ONE thing.
 
----
+## Reference depth (when you need it)
 
-## Suggested flow (adapt as needed)
-
-This is a flow that works — not a script you must execute. Adapt to the user's situation.
-
-**CHECK** — Quietly confirm: what they want to ship, target platforms, media on disk (or a public URL), API key resolved, `accountId` resolved via `GET /v1/accounts`. If something's missing, ask about ONE thing — the most blocking one — and continue once they answer. Don't surface "things to fix" as a list.
-
-**UPLOAD** — Presign + PUT + HEAD-verify each media file. Files >50 MB need the external-storage fallback (see `reference/zernio-upload.md` — Zernio's presigned URLs have a CRC32 bug for large files).
-
-**BUILD** — Assemble the POST body. The 10 field placement rules in `reference/zernio-post.md` are not optional — get them wrong and the post silently breaks. Highlights: `content` is the top-level caption, `platformSpecificData` is flat (not nested under platform name), `tags` is a comma-separated string (not array), `thumbnail` is a plain URL string (not an object), `firstComment` must be in the create call.
-
-**APPROVE** — Show the user the full package: platforms, schedule, content preview per platform, media URLs, first comment. Wait for explicit OK. If they ask for changes, apply them and re-show the full block.
-
-**POST** — `POST https://zernio.com/api/v1/posts` with the assembled body. Always `scheduledFor` for multi-platform.
-
-**VERIFY** — Read the Zernio response. Per platform, after `scheduledFor + 60s` (retry once at +120s):
-- YouTube → `GET https://www.youtube.com/oembed?url={video_url}&format=json` confirms title + thumbnail
-- Others → HEAD the public URL; 200 = soft success
-- On mismatch, name the dropped field and offer a remediation
-
-**LOG** — Write `./posts/YYYY-MM-DD-{slug}.json` with the Zernio response + per-platform verification verdict + ISO timestamp.
-
----
-
-## When something is out of scope
-
-This skill **ships** content. It doesn't:
-
-- Generate captions, titles, hashtags, or thumbnails (those come from the user)
-- Render a video from images (carousel-to-video is a different problem)
-- Connect new Zernio accounts (the user does that in the Zernio dashboard)
-- Read from Google Drive / Dropbox without an explicit MCP / public URL the user provides
-
-When the user asks for something out of scope, say so plainly without judgment:
-
-> "That part isn't what this skill does. Once you've `<got the file on disk / written the caption / connected the account>`, come back and I'll ship it."
-
-Don't try to do the out-of-scope work with adjacent tools. Stay in lane.
-
----
-
-## When you're stuck
-
-The OpenAPI spec at `reference/zernio-openapi.yaml` is the source of truth if anything in the markdown files disagrees with it. Grep it.
-
-If you're missing context about a platform's quirks (allowed aspect ratios, character limits, pinned-comment support), read `reference/platforms/{platform}.md` for that specific one.
-
-If you genuinely can't make progress, surface the blocker to the user as a clear single question — not a checklist.
+| File | When |
+|------|------|
+| `reference/zernio-api.md` | You need the endpoint list, auth model, or `/accounts` shape |
+| `reference/zernio-upload.md` | Media upload — presign mechanics, the >50 MB CRC32 workaround |
+| `reference/zernio-post.md` | The POST body shape and the 10 field placement rules |
+| `reference/principles.md` | The full verification protocol + anti-patterns |
+| `reference/platforms.md` | The 13-platform capability matrix |
+| `reference/platforms/{platform}.md` | Per-platform quirks for one specific platform |
+| `reference/zernio-openapi.yaml` | The 17K-line OpenAPI spec — source of truth if anything else disagrees |
