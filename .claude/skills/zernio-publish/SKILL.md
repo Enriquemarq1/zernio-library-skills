@@ -32,10 +32,12 @@ CHECK → UPLOAD → BUILD → APPROVE → POST → VERIFY → LOG
 1. Check `$ZERNIO_API_KEY` in the environment.
 2. If not set, check for a `.env` file next to the manifest, then at the project root. If found, source it (`set -a; source .env; set +a`).
 3. If set: use it directly in `Authorization: Bearer $ZERNIO_API_KEY` headers.
-4. If still not set after step 2: surface a clear message and stop:
+4. If still not set after step 2 (or `.env` still has the placeholder value): surface a clear message and stop:
    ```
    ZERNIO_API_KEY is not set.
-     Option A: cp .env.example .env  (then edit .env with your real key)
+     Option A: edit .env at the repo root and replace the placeholder
+               (then `git update-index --skip-worktree .env` to keep your
+                real key out of commits)
      Option B: export ZERNIO_API_KEY="zk_xxx"   (macOS / Linux)
                $env:ZERNIO_API_KEY = "zk_xxx"   (Windows PowerShell)
    Get your key from https://zernio.com/dashboard/api-keys

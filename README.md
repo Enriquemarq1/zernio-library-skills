@@ -49,19 +49,20 @@ Then in your project, Claude Code will auto-discover the skill in `.claude/skill
 
 **2. Hand the key to the skill** — the path depends on where you're running:
 
-- **Claude Code CLI:** either export it in your shell, or drop it in a local `.env`.
+- **Claude Code CLI:** either export it in your shell, or edit the `.env` file at the repo root.
 
   ```bash
   # Option A — export per shell session
   export ZERNIO_API_KEY="zk_xxx"             # macOS / Linux
   $env:ZERNIO_API_KEY = "zk_xxx"             # Windows PowerShell
 
-  # Option B — local .env file (recommended for projects you'll use repeatedly)
-  cp .env.example .env
-  # then edit .env and paste your real key
+  # Option B — edit the .env file (recommended for projects you'll use repeatedly)
+  # 1. Open .env and replace the placeholder with your real key
+  # 2. Tell Git to ignore your local edits so the real key never gets staged:
+  git update-index --skip-worktree .env
   ```
 
-  `.env` is gitignored. `scripts/post.sh` auto-sources it. Claude Code skills can read `$ZERNIO_API_KEY` from the env once it's exported (Option A) or once you've sourced `.env` in your shell.
+  `.env` ships with a placeholder. `scripts/post.sh` auto-sources it. The `--skip-worktree` step is important — `.env` is tracked (so you get the placeholder on clone), but you don't want your real key to land in a commit. See the warning header inside `.env`.
 
 - **Claude.ai web:** at the start of the conversation, paste the key in chat (the skill prompts you for it on the first run). Claude holds it in working memory for that conversation only — it's not persisted across sessions, never written to disk, and never echoed back.
 

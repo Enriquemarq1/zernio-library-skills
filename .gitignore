@@ -10,7 +10,9 @@ Thumbs.db
 *.swp
 
 # Secrets (never commit)
-.env
+# Note: .env IS tracked here (ships with a placeholder). After cloning,
+# run `git update-index --skip-worktree .env` so your local edits with
+# the real key don't get staged. See the header comment in .env.
 .env.local
 .env.keys
 *.pem

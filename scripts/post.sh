@@ -27,8 +27,9 @@ for envfile in "$(dirname "$MANIFEST")/.env" "./.env"; do
 done
 
 if [[ -z "${ZERNIO_API_KEY:-}" || "$ZERNIO_API_KEY" == "zk_replace_with_your_real_key" ]]; then
-  echo "ZERNIO_API_KEY is not set." >&2
-  echo "  Option 1: cp .env.example .env  (then edit .env with your real key)" >&2
+  echo "ZERNIO_API_KEY is not set (or .env still has the placeholder)." >&2
+  echo "  Option 1: edit .env and replace the placeholder, then run:" >&2
+  echo "            git update-index --skip-worktree .env" >&2
   echo "  Option 2: export ZERNIO_API_KEY='zk_xxx'" >&2
   echo "Get your key at https://zernio.com/dashboard/api-keys" >&2
   exit 2
