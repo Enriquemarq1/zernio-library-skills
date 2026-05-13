@@ -18,24 +18,42 @@ Every platform's quirks documented in `.claude/skills/zernio-publish/reference/p
 
 ---
 
-## Quickstart
+## Install
 
-**1. Get a Zernio account.** Sign up at [zernio.com](https://zernio.com), connect the platforms you want to post to, and grab your API key from the dashboard.
+Pick the path that matches how you use Claude.
 
-**2. Drop this skill into your Claude Code project.**
+### Option A: Claude.ai web (Upload Skill UI)
+
+Download the prebuilt skill ZIP from the latest release and upload it on claude.ai:
+
+> [**Download `zernio-publish.skill.zip` (latest release)**](https://github.com/Trejon-888/zernio-library-skills/releases/latest/download/zernio-publish.skill.zip)
+
+Then in claude.ai → **Capabilities → Skills → Upload skill** → drag the downloaded `.zip` file in.
+
+**Why a separate ZIP?** GitHub's "Download ZIP" button zips the whole repo (with `README.md` and `LICENSE` at the root), but Claude's Upload Skill UI requires `SKILL.md` at the root of the upload. The release asset above is built with the correct shape.
+
+### Option B: Claude Code (CLI / local project)
 
 ```bash
-git clone https://github.com/your-username/zernio-library-skills.git
+git clone https://github.com/Trejon-888/zernio-library-skills.git
 cp -r zernio-library-skills/.claude/skills/zernio-publish /path/to/your-project/.claude/skills/
 ```
 
-**3. Export your API key.**
+Then in your project, Claude Code will auto-discover the skill in `.claude/skills/zernio-publish/`.
+
+---
+
+## Quickstart (after install)
+
+**1. Get a Zernio account.** Sign up at [zernio.com](https://zernio.com), connect the platforms you want to post to, and grab your API key from the dashboard.
+
+**2. Export your API key.**
 
 ```bash
 export ZERNIO_API_KEY="zk_xxx"
 ```
 
-**4. Write a manifest** — what you want to ship, where it should go. See `examples/sample-post.json`:
+**3. Write a manifest** — what you want to ship, where it should go. See `examples/sample-post.json`:
 
 ```json
 {
@@ -59,13 +77,19 @@ export ZERNIO_API_KEY="zk_xxx"
 }
 ```
 
-**5. Run it in Claude Code.**
+**4. Run it.**
 
+In Claude Code:
 ```
 publish ./manifest.json
 ```
 
-Claude reads the skill, walks the seven-step flow (check → upload → build → approve → POST → verify → log), shows you the package, waits for your approval, ships it, verifies it landed, and writes the result to `./posts/`.
+Or on claude.ai web (after uploading the skill), just say:
+```
+Publish this manifest to Zernio. [paste manifest content]
+```
+
+Either way, Claude walks the seven-step flow (check → upload → build → approve → POST → verify → log), shows you the package, waits for your approval, ships it, verifies it landed, and writes the result to `./posts/` (Claude Code) or surfaces it in chat (web).
 
 You can also call the bare bash flow without Claude — see `scripts/post.sh`.
 
@@ -91,8 +115,12 @@ zernio-library-skills/
 │       └── manifest.json                             ← the input schema
 ├── examples/
 │   └── sample-post.json                              ← a worked example
-└── scripts/
-    └── post.sh                                       ← bare bash one-shot flow
+├── scripts/
+│   ├── post.sh                                       ← bare bash one-shot flow
+│   ├── build-skill-zip.sh                            ← build dist/*.skill.zip (Linux/macOS)
+│   └── build-skill-zip.ps1                           ← build dist/*.skill.zip (Windows)
+└── dist/
+    └── zernio-publish.skill.zip                      ← upload-ready ZIP for claude.ai web
 ```
 
 ---
