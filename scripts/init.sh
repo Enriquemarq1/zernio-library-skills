@@ -40,14 +40,15 @@ if [[ -z "$KEY" ]]; then
 elif [[ "$KEY" == "$PLACEHOLDER" ]]; then
   KEY_STATUS="PLACEHOLDER — .env still has the default; user must edit it"
   KEY_OK=0
-elif [[ ! "$KEY" =~ ^zk_ ]]; then
-  # Heuristic: real Zernio keys start with zk_. Accept anyway but flag.
-  KEY_STATUS="LOOKS UNUSUAL — value doesn't start with zk_ (continuing anyway)"
-  KEY_OK=1
 else
-  # Mask all but the first 5 chars for the printout
-  KEY_PREVIEW="${KEY:0:5}...${KEY: -4}"
-  KEY_STATUS="OK — loaded ($KEY_PREVIEW)"
+  # Mask the middle of the key for the printout
+  KEY_LEN=${#KEY}
+  if (( KEY_LEN > 12 )); then
+    KEY_PREVIEW="${KEY:0:4}...${KEY: -4}"
+  else
+    KEY_PREVIEW="(short)"
+  fi
+  KEY_STATUS="OK — loaded ($KEY_PREVIEW, $KEY_LEN chars)"
   KEY_OK=1
 fi
 
