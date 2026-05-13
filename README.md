@@ -1,10 +1,10 @@
 # Zernio Library Skills
 
-> A Claude Code skill that turns one content piece into a 13-platform distribution system through [Zernio](https://zernio.com).
+> A Claude Code skill for end-to-end social publishing through [Zernio](https://zernio.com) — across 13 platforms.
 
-One manifest → upload → POST → verify → log. No config files, no API plumbing, no glue code. You author the captions, the skill ships them.
+You hand Claude an asset (video, image, audio, carousel, URL, Drive link) and tell it where to post. Claude analyzes the asset (transcript extraction for video/audio, vision for images), drafts platform-tailored captions, titles, hashtags, and first comments, converts formats if needed (`ffmpeg` for slideshow → video, aspect ratio reframing), uploads the media to Zernio, shows you the full package for approval, schedules the post, verifies it landed on each platform, and logs the result.
 
-In Claude Code, just type **`/zernio-post`** and the publishing flow fires.
+Drop a video file in chat, say "publish this to my TikTok, Reels, and Shorts." Claude does the rest.
 
 ## Supported platforms (13)
 
@@ -41,12 +41,12 @@ git clone https://github.com/Trejon-888/zernio-library-skills.git
 cp -r zernio-library-skills/.claude/. /path/to/your-project/.claude/
 ```
 
-This brings two things into your project:
+This brings into your project:
 
-- The skill at `.claude/skills/zernio-publish/` (auto-discovered by Claude Code)
-- The slash command `/zernio-post` at `.claude/commands/zernio-post.md` — type it in any chat and the flow fires
+- The `zernio-publish` skill at `.claude/skills/zernio-publish/` — auto-discovered by Claude Code, triggers whenever you ask to publish / post / ship / schedule social content
+- Anthropic's official `skill-creator` at `.claude/skills/skill-creator/` — useful when building or improving other skills
 
-If you only want the skill (and prefer to invoke it by intent rather than a slash command), copy `.claude/skills/zernio-publish/` alone.
+No slash command needed — Claude auto-triggers the skill on intent. Just say what you want to ship in chat.
 
 ---
 
@@ -75,52 +75,32 @@ If you only want the skill (and prefer to invoke it by intent rather than a slas
 
 The key is **never bundled with this skill** and never lives inside `manifest.json` or any committed file. See [`.claude/skills/zernio-publish/SKILL.md § Resolving the API key`](.claude/skills/zernio-publish/SKILL.md) for the full rules.
 
-**3. Write a manifest** — what you want to ship, where it should go. See `examples/sample-post.json`:
+**3. Tell Claude what you want to ship.**
 
-```json
-{
-  "slug": "my-first-post",
-  "content": "The thing I built today",
-  "media": {
-    "video": "./output.mp4",
-    "thumbnail": "./thumb.jpg"
-  },
-  "platforms": {
-    "youtube": {
-      "title": "How I built X in 30 days",
-      "categoryId": "28",
-      "tags": "claude,zernio,automation",
-      "firstComment": "What would you build? Drop it below."
-    },
-    "linkedin": { "visibility": "public" },
-    "twitter": { "visibility": "public" },
-    "threads": { "visibility": "public" }
-  }
-}
-```
+Just talk to it. Examples:
 
-**4. Tell Claude what you want to ship.**
+> "Publish this video to my YouTube, TikTok, Reels, and Shorts: `./media/launch.mp4`"
+>
+> "Drop a carousel post to Instagram and LinkedIn from this Drive folder: `<drive-url>`. The angle is 'three lessons from launching v1'."
+>
+> "Schedule this announcement to LinkedIn, X, and Threads for tomorrow at 9am: ... [paste text or attach a file]"
 
-The manifest is optional. You can give Claude a manifest path, paste content in chat, or just describe what to post — Claude assembles what's needed and asks for anything missing.
+Claude:
 
-In Claude Code:
-```
-/zernio-post
-```
-or
-```
-/zernio-post ./manifest.json
-```
-or just by intent:
-```
-ship a LinkedIn post that says "<your text>" with this image: ./hero.jpg
-```
+1. Pulls the asset onto disk (Drive download via `gdown` / `curl`, file paths, URLs)
+2. Analyzes it — transcribes the video, looks at the images, reads the page
+3. Drafts platform-tailored captions, titles, hashtags, first comments
+4. Converts formats if needed (e.g., carousel images → 9:16 video for TikTok)
+5. Uploads media to Zernio
+6. Shows you the full package — every platform, every caption, schedule, media URLs
+7. Waits for your "ship it" / "approved"
+8. POSTs to Zernio with `scheduledFor` 2-3 min ahead
+9. Verifies it landed on each platform via oEmbed / HEAD checks
+10. Logs the result to `./posts/YYYY-MM-DD-{slug}.json`
 
-On claude.ai web (after uploading the skill ZIP), say what you want to publish, paste your media link or attach a file. Claude handles the API calls.
+You can edit any draft caption, change the schedule, swap platforms, or kill the whole thing before approval. The approval gate is non-negotiable — Claude never auto-publishes.
 
-Claude shows you the full package, waits for your approval, ships it, verifies it landed on each platform, and writes the result to `./posts/`. The hard rules — never auto-publish, always verify, scheduled not immediate, Zernio only — are in `CLAUDE.md`.
-
-For a bare-bash one-shot publish without Claude, see `scripts/post.sh`.
+For a bare-bash one-shot publish without Claude (you author everything, the script just calls the API), see `scripts/post.sh`.
 
 ---
 
@@ -131,25 +111,23 @@ zernio-library-skills/
 ├── README.md                                         ← you are here
 ├── CLAUDE.md                                         ← unified context for AI agents in this project
 ├── LICENSE                                           ← MIT
-├── .claude/
-│   ├── commands/
-│   │   └── zernio-post.md                            ← /zernio-post slash command
-│   └── skills/zernio-publish/
-│       ├── SKILL.md                                  ← the seven-step flow
-│       ├── reference/
-│       │   ├── zernio-api.md                         ← endpoints, auth, account model
-│       │   ├── zernio-upload.md                      ← presign → PUT → HEAD, CRC32 bug
-│       │   ├── zernio-post.md                        ← POST body shape, 10 field rules
-│       │   ├── principles.md                         ← approval gate, verify-don't-trust
-│       │   ├── platforms.md                          ← capability matrix
-│       │   ├── platforms/{13 platform docs}.md       ← per-platform deep dives
-│       │   └── zernio-openapi.yaml                   ← canonical 17K-line OpenAPI spec
-│       └── templates/
-│           └── manifest.json                         ← the input schema
+├── .claude/skills/
+│   ├── zernio-publish/                               ← the publishing skill
+│   │   ├── SKILL.md                                  ← end-to-end workflow + Zernio knowledge
+│   │   ├── reference/
+│   │   │   ├── zernio-api.md                         ← endpoints, auth, account model
+│   │   │   ├── zernio-upload.md                      ← presign → PUT → HEAD, large-file fallback
+│   │   │   ├── zernio-post.md                        ← POST body shape, 10 field rules
+│   │   │   ├── principles.md                         ← approval gate, verification protocol
+│   │   │   ├── platforms.md                          ← 13-platform capability matrix
+│   │   │   ├── platforms/{13 platform docs}.md       ← per-platform deep dives
+│   │   │   └── zernio-openapi.yaml                   ← canonical 17K-line OpenAPI spec
+│   │   └── templates/manifest.json                   ← reference shape of the Zernio POST body
+│   └── skill-creator/                                ← Anthropic's official skill-creator (bundled)
 ├── examples/
-│   └── sample-post.json                              ← a worked example
+│   └── sample-post.json                              ← a worked example POST body
 ├── scripts/
-│   ├── post.sh                                       ← bare bash one-shot flow
+│   ├── post.sh                                       ← bare bash one-shot flow (you author everything)
 │   ├── build-skill-zip.sh                            ← build dist/*.skill.zip (Linux/macOS)
 │   └── build-skill-zip.ps1                           ← build dist/*.skill.zip (Windows)
 └── dist/
@@ -160,35 +138,17 @@ zernio-library-skills/
 
 ## Design principles
 
-**Zero local config.** No `config.json`, no profile YAML, no `.env.keys`. The only thing you set is `ZERNIO_API_KEY` in your shell environment. Account IDs resolve at runtime from `GET /v1/accounts`. If a platform isn't connected, the skill fails with a clear message naming the platform.
+**End-to-end agency.** Claude handles the whole arc — fetch, analyze, draft, convert, upload, package, ship, verify, log. The skill informs; the agent acts.
 
-**Manifest-driven.** Captions, titles, tags, first comments — all live in your `manifest.json`. The skill never invents metadata. You author the words; the skill handles the API.
+**Zero local config.** Only `ZERNIO_API_KEY` (env var or `.env`). Account IDs resolve at runtime from `GET /v1/accounts`.
 
-**No auto-publish.** Every post passes through an explicit approval gate. Silence is never approval. There's no `--yes` flag or env var to bypass this — the skill prompts every time.
+**Drafts come from the asset.** Claude analyzes what the asset is *about* (video transcripts, image content) and writes captions / titles / hashtags from that. You stay in approval, not authorship.
 
-**Verify, don't trust.** A 200 OK from Zernio means the request was accepted, not that the destination platform rendered your fields. YouTube routinely strips titles, tags, and thumbnails silently. Step 6 hits the destination platform directly (YouTube oEmbed, etc.) and surfaces field-level drift.
+**Approval before publish.** Every post passes through an explicit gate. Silence is never approval. No bypass.
 
-**Schedule, don't push.** Multi-platform posts always use `scheduledFor` 2-3 minutes ahead. `publishNow: true` causes timeouts and duplicate posts across platforms.
+**Verify, don't trust.** Zernio's 200 OK ≠ landed. Claude hits each platform's oEmbed / public URL after `scheduledFor + 60s` and surfaces any field drift.
 
----
-
-## What this is not
-
-- **Not a content generator.** Captions, titles, hashtags — you write them. The manifest is the source of truth.
-- **Not a Zernio replacement.** Zernio handles OAuth, account connections, scheduling, and the platform APIs. This skill is the orchestration layer that talks to Zernio cleanly.
-- **Not n8n / Make / Zapier.** It's a Claude Code skill — files on disk that Claude reads and follows. No GUI, no workflow runner. Just a folder you drop into `.claude/skills/`.
-
----
-
-## Common patterns
-
-**Same content, all platforms:** Fill `content` once. Set `platforms.{each}.visibility: "public"`. Done.
-
-**Per-platform adaptation:** For each platform, write a tailored caption. LinkedIn ≠ Instagram ≠ Threads.
-
-**Staggered rollout:** Run the skill twice with different manifests — primary platform at `scheduledFor +3min`, tier-2 platforms at `+2h`, tier-3 at `+24h`. Avoids duplicate-content penalties.
-
-**Large video (>50 MB):** The skill auto-routes through an external-storage fallback (Drive, S3, etc.) when files exceed Zernio's 50 MB CRC32 limit. See `reference/zernio-upload.md`.
+**Schedule, don't push.** Multi-platform posts always use `scheduledFor` 2-3 minutes ahead.
 
 ---
 
