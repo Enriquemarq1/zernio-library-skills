@@ -47,11 +47,20 @@ Then in your project, Claude Code will auto-discover the skill in `.claude/skill
 
 **1. Get a Zernio account.** Sign up at [zernio.com](https://zernio.com), connect the platforms you want to post to, and grab your API key from the dashboard.
 
-**2. Export your API key.**
+**2. Hand the key to the skill** — the path depends on where you're running:
 
-```bash
-export ZERNIO_API_KEY="zk_xxx"
-```
+- **Claude Code CLI:** export it in your shell.
+  ```bash
+  # macOS / Linux
+  export ZERNIO_API_KEY="zk_xxx"
+
+  # Windows PowerShell
+  $env:ZERNIO_API_KEY = "zk_xxx"
+  ```
+
+- **Claude.ai web:** at the start of the conversation, paste the key in chat (the skill prompts you for it on the first run). Claude holds it in working memory for that conversation only — it's not persisted across sessions, never written to disk, and never echoed back.
+
+The key is **never bundled with this skill** and never lives inside `manifest.json` or any committed file. See [`.claude/skills/zernio-publish/SKILL.md § Resolving the API key`](.claude/skills/zernio-publish/SKILL.md) for the full rules.
 
 **3. Write a manifest** — what you want to ship, where it should go. See `examples/sample-post.json`:
 

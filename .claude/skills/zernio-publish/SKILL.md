@@ -15,7 +15,7 @@ CHECK → UPLOAD → BUILD → APPROVE → POST → VERIFY → LOG
 
 **What you need before running:**
 
-- `ZERNIO_API_KEY` exported in your environment (`export ZERNIO_API_KEY=...`)
+- A Zernio API key (resolved at runtime — see § Resolving the API key below)
 - A Zernio account with the platforms you want to post to already connected via the Zernio dashboard
 - A `manifest.json` (see `templates/manifest.json` and `examples/`)
 
@@ -23,11 +23,43 @@ CHECK → UPLOAD → BUILD → APPROVE → POST → VERIFY → LOG
 
 ---
 
+## Resolving the API key
+
+**The API key is NEVER bundled in this skill, this repo, or any committed file.** It must come from the user at runtime. The resolution differs by runtime:
+
+**Claude Code CLI (shell available):**
+
+1. Check `$ZERNIO_API_KEY` in the environment.
+2. If set: use it directly in `Authorization: Bearer $ZERNIO_API_KEY` headers.
+3. If not set: surface a clear message and stop:
+   ```
+   ZERNIO_API_KEY is not set. Export it in your shell:
+     export ZERNIO_API_KEY="zk_xxx"   (macOS / Linux)
+     $env:ZERNIO_API_KEY = "zk_xxx"   (Windows PowerShell)
+   Get your key from https://zernio.com/dashboard/api-keys
+   ```
+
+**Claude.ai web (no shell — runs in chat UI):**
+
+1. At Step 1, ask the user (once per conversation):
+   > "Paste your Zernio API key — I'll hold it in memory for this conversation only. Get one at https://zernio.com/dashboard/api-keys."
+2. Hold the key in working memory for the rest of the conversation.
+3. Use it in every API call. **Never echo it back in chat output.** **Never write it to a file.**
+4. If the user starts a new conversation, ask again. The key does not persist across conversations.
+
+**Universal rules (both runtimes):**
+
+- Never write the key to disk inside this skill folder, the manifest, or any log file.
+- Never include the key in `./posts/*.json` output. The log records the Zernio response (post IDs, URLs) but not the auth header.
+- If a user pastes a key into a file (e.g., a config they intend to commit), refuse it and redirect them to the env var / chat paste path.
+
+---
+
 ## Step 1: Check prerequisites
 
 Run the pre-post checklist from `reference/principles.md`:
 
-- `ZERNIO_API_KEY` is set
+- API key resolved (per § Resolving the API key above)
 - Manifest exists and parses as JSON
 - Every platform in `manifest.platforms` has the required fields for that platform (see `reference/platforms/{platform}.md`)
 - Media files referenced by `manifest.media.video` / `manifest.media.thumbnail` exist on disk

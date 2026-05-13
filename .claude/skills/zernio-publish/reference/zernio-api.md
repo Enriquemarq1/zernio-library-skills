@@ -29,13 +29,23 @@ This is the master index. Each section points at a detail file under `reference/
 
 ## Authentication
 
-Get an API key from your Zernio dashboard → API Keys. Export it in your environment:
+Every request to the API needs `Authorization: Bearer <api-key>`. The key is **never bundled in this skill** — it's resolved at runtime from one of two sources, depending on where the skill is running:
+
+**Claude Code CLI (shell-backed):** read `$ZERNIO_API_KEY` from the environment.
 
 ```bash
+# macOS / Linux
 export ZERNIO_API_KEY="zk_xxx"
+
+# Windows PowerShell
+$env:ZERNIO_API_KEY = "zk_xxx"
 ```
 
-Every request to the API needs `Authorization: Bearer $ZERNIO_API_KEY`. The skill assumes this is set; if it isn't, Step 1 fails with a clear message.
+**Claude.ai web (no shell):** ask the user to paste the key in chat at Step 1, hold it in working memory for the conversation, and use it in every API call. Never echo the key back, never write it to a file.
+
+Get your key from https://zernio.com/dashboard/api-keys.
+
+See `SKILL.md § Resolving the API key` for the full resolution flow including error messages and the universal "never persist to disk" rules.
 
 ---
 

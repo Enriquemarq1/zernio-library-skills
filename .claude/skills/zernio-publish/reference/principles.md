@@ -16,7 +16,7 @@ Called from `zernio-publish` Steps 1, 4, and 6. These are the load-bearing rules
 
 ## Pre-Post checklist (run before Step 4 approval)
 
-- [ ] `ZERNIO_API_KEY` resolves
+- [ ] API key resolved (env var on CLI, chat paste on web — see `SKILL.md § Resolving the API key`)
 - [ ] Manifest exists and parses as JSON
 - [ ] Per-platform `accountId` resolved from `GET /accounts` for every platform named in the manifest
 - [ ] Media uploaded and HEAD-verified (see `reference/zernio-upload.md`)
