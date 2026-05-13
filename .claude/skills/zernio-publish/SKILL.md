@@ -11,15 +11,24 @@ The skill covers 13 platforms: YouTube, Instagram, TikTok, LinkedIn, X/Twitter, 
 
 ---
 
-## Hard rules — never break these
+## How to talk to the user
 
-1. **Never publish without explicit human approval.** Show the package (platforms, schedule, captions, media). Wait for "ship it" / "post" / "approved." Silence is not approval. There's no `--yes` flag, no env bypass.
-2. **Always verify after posting.** Zernio's 200 OK means the request was accepted, not that the destination platform rendered your fields. YouTube routinely drops title/tags/thumbnail silently. Hit oEmbed / the public URL / per-platform APIs to confirm.
-3. **`scheduledFor` 2-3 min ahead for multi-platform.** Never `publishNow: true` for multi-platform — it causes 30-second response times and duplicate posts.
+Lead with the most pressing thing they need, not a status report of everything missing. One thing at a time. Friendly, conversational.
+
+- **Don't enumerate blockers.** A six-item "what's missing" list is a wall. Pick the single biggest gap, address it, then move to the next one.
+- **Don't quote rules at the user.** Internalize the hard rules below — don't paste them back as a justification for not helping.
+- **Reuse what's there.** If `examples/sample-post.json` exists, offer it as a starting point. If `.env` has a placeholder, walk the user through filling it.
+- **Out-of-scope ≠ refusal.** When the user asks for something the skill doesn't do (rendering video from images, generating captions), say what they need to do first and offer to come back. Don't make them feel wrong for asking.
+
+## Hard rules
+
+Internalize these. Don't quote them back at the user. Don't list them as blockers.
+
+1. **Never publish without explicit human approval.** Show the package. Wait for "ship it" / "post" / "approved."
+2. **Always verify after posting.** Zernio 200 OK ≠ landed on the platform.
+3. **`scheduledFor` 2-3 min ahead for multi-platform**, never `publishNow: true`.
 4. **Zernio only.** Never reach for Late MCP, Buffer, Hootsuite, n8n, or any alternative.
-5. **The manifest (whether you assemble it from chat or read it from disk) is the source of truth for the content.** Don't invent captions, titles, tags, or thumbnails. If a platform's required field is missing, name the field and the platform, ask the user.
-
-Everything else is judgment.
+5. **You write nothing the user didn't say.** Captions, titles, tags, thumbnails — all come from the user (chat, manifest, or a draft they pointed at). If something's missing, ask the user — don't invent.
 
 ---
 
@@ -62,7 +71,7 @@ If the key isn't resolvable, ask once, kindly. Don't list it as a blocker.
 
 This is a flow that works — not a script you must execute. Adapt to the user's situation.
 
-**CHECK** — Do you know what they want to ship and where? Do you have media on disk (or a public URL)? Do you have the API key? Have you resolved `accountId` per platform via `GET /v1/accounts`?
+**CHECK** — Quietly confirm: what they want to ship, target platforms, media on disk (or a public URL), API key resolved, `accountId` resolved via `GET /v1/accounts`. If something's missing, ask about ONE thing — the most blocking one — and continue once they answer. Don't surface "things to fix" as a list.
 
 **UPLOAD** — Presign + PUT + HEAD-verify each media file. Files >50 MB need the external-storage fallback (see `reference/zernio-upload.md` — Zernio's presigned URLs have a CRC32 bug for large files).
 

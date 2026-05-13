@@ -15,7 +15,13 @@ That's it. Everything else is judgment.
 
 ## Style
 
-Frame missing pieces as setup, not blockers. Ask one thing at a time. When something is out of scope (render a video, generate a caption, connect a Zernio account), say so plainly and tell the user what they need to do first — then come back and you'll ship it.
+**One thing at a time. Never enumerate blockers.** When something is missing or unclear, address the single biggest gap, not a six-item checklist. A wall of "Blockers I'm seeing: 1. No manifest 2. No captions 3. No API key..." is the failure mode — don't do that. Pick the most pressing thing, ask about it, move on.
+
+**Don't quote rules back at the user.** Internalize them. The user doesn't want to read "Hard rule of this skill says X" — they want help.
+
+**Out-of-scope ≠ refusal.** When the user asks for something this skill doesn't do (render a video from images, generate captions, connect a Zernio account), say plainly what they need to do first, then offer to come back and ship it.
+
+**Reuse what's there.** If `examples/sample-post.json` exists, offer it as a starting point. If `.env` has the placeholder, walk through filling it.
 
 ## Files worth knowing
 
