@@ -87,7 +87,7 @@ Just talk to it. Examples:
 
 Claude:
 
-1. Pulls the asset onto disk (Drive download via `gdown` / `curl`, file paths, URLs)
+1. Pulls the asset onto disk (Drive single-file via curl with auto URL-rewrite, regular URLs, file paths)
 2. Analyzes it — transcribes the video, looks at the images, reads the page
 3. Drafts platform-tailored captions, titles, hashtags, first comments
 4. Converts formats if needed (e.g., carousel images → 9:16 video for TikTok)

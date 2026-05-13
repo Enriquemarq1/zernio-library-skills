@@ -33,7 +33,7 @@ If their message contained a URL, a Google Drive link, or a file path, fetch it 
 bash scripts/fetch.sh "<their-url-or-path>" ./media/
 ```
 
-`fetch.sh` auto-detects Google Drive folders (uses `gdown`), Drive single files (converts share-URL to direct-download), regular HTTPS URLs (uses `curl -L`), and local paths (just copies). **Don't ask "is the Drive folder public?" or "do you have the MCP connector?"** Run the script. If it fails, the script tells you why and you can ask then. Try first.
+`fetch.sh` auto-detects Drive single files (converts the share-URL to a direct-download URL via pure curl, with virus-scan-warning fallback), regular HTTPS URLs (uses `curl -L`), and local paths (just copies). Pure bash + curl — no external dependencies. **Don't ask "is the Drive public?" or "do you have the MCP connector?"** Run the script. If it fails, the script tells you why.
 
 ### 3. Look around
 
@@ -66,8 +66,8 @@ You should have already done this in the "First actions" section above via `bash
 
 If `fetch.sh` failed on a specific input, it told you why. Common cases and fixes:
 
-- **"Drive file is too large for direct curl path"** → install gdown: `pip install gdown` and retry.
-- **"Google Drive folder detected but gdown is not installed"** → install gdown or ask the user to download the folder locally.
+- **"Drive returned an HTML page instead of the file"** → the file may be private or the share permissions don't allow direct download. Ask the user to make it public, or share it as a downloaded file.
+- **"Drive folder URLs aren't supported"** → folder pages render via JS, so curl alone can't list them. Options: use your native web/fetch tools to load the folder page and extract file IDs, ask the user for individual file URLs, or ask them to download the folder locally and share the path.
 - **HTTP 4xx from curl** → the link may be private. Ask the user to make it public-share, or drop the file into the project locally. One question, then proceed.
 
 For media you fetched outside the script (e.g., direct download you orchestrated yourself), confirm it landed:

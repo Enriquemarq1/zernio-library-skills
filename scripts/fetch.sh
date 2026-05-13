@@ -1,21 +1,25 @@
 #!/usr/bin/env bash
-# scripts/fetch.sh — universal media fetcher.
+# scripts/fetch.sh — universal media fetcher using only curl + bash.
 #
 # Hand it a URL, Google Drive link, or local path; it does the right thing
-# and drops the file(s) into the target directory. No questions about
-# "is it authenticated?" — try first, fail clean if it doesn't work.
+# and drops the file into the target directory.
 #
 # Usage:
 #   bash scripts/fetch.sh <url-or-path> [target-dir]
 #
 # Examples:
-#   bash scripts/fetch.sh "https://drive.google.com/file/d/ABC123/view"      ./media/
-#   bash scripts/fetch.sh "https://drive.google.com/drive/folders/XYZ"      ./media/
-#   bash scripts/fetch.sh "https://example.com/video.mp4"                   ./media/
-#   bash scripts/fetch.sh "./local-file.mp4"                                ./media/
+#   bash scripts/fetch.sh "https://drive.google.com/file/d/ABC123/view"   ./media/
+#   bash scripts/fetch.sh "https://example.com/video.mp4"                 ./media/
+#   bash scripts/fetch.sh "./local-file.mp4"                              ./media/
+#
+# Note: Drive *folder* URLs aren't supported by this script (the folder
+# page is a JS-rendered SPA). If you (the agent) get a folder URL, ask
+# the user to share individual file URLs OR download the folder locally
+# and pass the directory path. Or use Claude's native web capabilities
+# to inspect the folder page and extract file IDs yourself.
 #
 # Exit codes:
-#   0   success — files are in target dir
+#   0   success — file is in target dir
 #   1   couldn't fetch — input invalid or remote unreachable
 #   2   bad arguments
 
@@ -45,40 +49,52 @@ if [[ -d "$INPUT" ]]; then
   exit 0
 fi
 
-# Google Drive folder
+# Google Drive folder — not supported by curl alone; agent should handle natively
 if [[ "$INPUT" == *"drive.google.com/drive/folders/"* ]]; then
-  if command -v gdown >/dev/null 2>&1; then
-    echo "detected: Google Drive folder — using gdown"
-    gdown --folder "$INPUT" -O "$TARGET" --quiet
-    echo "fetched: $(ls -1 "$TARGET" | wc -l) files in $TARGET/"
-    exit 0
-  else
-    echo "Google Drive folder detected but gdown is not installed." >&2
-    echo "Install: pip install gdown" >&2
-    echo "Or: ask the user to download the folder locally and pass the path." >&2
-    exit 1
-  fi
+  echo "Drive folder URLs aren't supported by this script (the folder page renders via JS)." >&2
+  echo "Options:" >&2
+  echo "  - Ask the user to share individual file URLs instead" >&2
+  echo "  - Ask the user to download the folder and share a local path" >&2
+  echo "  - Use your native web tools to inspect the folder and extract file IDs" >&2
+  exit 1
 fi
 
-# Google Drive single file: convert the share URL into a direct-download URL
+# Google Drive single file
 if [[ "$INPUT" =~ drive\.google\.com/file/d/([^/]+) ]]; then
   FILE_ID="${BASH_REMATCH[1]}"
-  echo "detected: Google Drive single file — converting to direct download (FILE_ID=$FILE_ID)"
+  echo "detected: Google Drive single file (FILE_ID=$FILE_ID)"
   DIRECT="https://drive.google.com/uc?export=download&id=$FILE_ID"
-  if command -v gdown >/dev/null 2>&1; then
-    gdown "$DIRECT" -O "$TARGET/" --quiet
-  else
-    # Fallback to curl with cookie handling for the virus-scan warning page
-    curl -L --cookie /tmp/gcookie -c /tmp/gcookie -o "$TARGET/drive-file" "$DIRECT" 2>/dev/null
-    rm -f /tmp/gcookie
-    # If we got an HTML virus-scan page, that's a "too big" case
-    if file "$TARGET/drive-file" 2>/dev/null | grep -qi 'html'; then
-      echo "Drive file is too large for the direct curl path." >&2
-      echo "Install gdown (pip install gdown) or ask the user for the file directly." >&2
-      rm -f "$TARGET/drive-file"
+
+  # Use curl with cookie handling for the virus-scan warning page that
+  # Drive sometimes serves for larger files.
+  COOKIE=$(mktemp)
+  curl -sL --cookie "$COOKIE" --cookie-jar "$COOKIE" "$DIRECT" -o "$TARGET/drive-file.tmp"
+
+  # If the result is HTML, it's the virus-scan-warning page — extract the confirm token and retry
+  if file "$TARGET/drive-file.tmp" 2>/dev/null | grep -qi 'html'; then
+    CONFIRM=$(grep -oE 'confirm=[a-zA-Z0-9_-]+' "$TARGET/drive-file.tmp" | head -1 | cut -d= -f2)
+    if [[ -n "$CONFIRM" ]]; then
+      curl -sL --cookie "$COOKIE" --cookie-jar "$COOKIE" \
+        "$DIRECT&confirm=$CONFIRM" -o "$TARGET/drive-file.tmp"
+    else
+      rm -f "$COOKIE" "$TARGET/drive-file.tmp"
+      echo "Drive returned an HTML page instead of the file. The file may be private or too large." >&2
+      echo "Ask the user to make the file public, or share it directly." >&2
       exit 1
     fi
   fi
+  rm -f "$COOKIE"
+
+  # Detect the file type and rename appropriately
+  TYPE=$(file --brief --mime-type "$TARGET/drive-file.tmp" 2>/dev/null || echo "unknown")
+  case "$TYPE" in
+    video/mp4)        mv "$TARGET/drive-file.tmp" "$TARGET/drive-file.mp4" ;;
+    video/quicktime)  mv "$TARGET/drive-file.tmp" "$TARGET/drive-file.mov" ;;
+    image/jpeg)       mv "$TARGET/drive-file.tmp" "$TARGET/drive-file.jpg" ;;
+    image/png)        mv "$TARGET/drive-file.tmp" "$TARGET/drive-file.png" ;;
+    audio/mpeg)       mv "$TARGET/drive-file.tmp" "$TARGET/drive-file.mp3" ;;
+    *)                echo "fetched: $TARGET/drive-file.tmp ($TYPE)" ;;
+  esac
   echo "fetched: Drive file -> $TARGET/"
   exit 0
 fi

@@ -13,11 +13,12 @@ source scripts/init.sh
 bash scripts/fetch.sh "<their-url-or-path>" ./media/
 ```
 
-`init.sh` sources `.env`, validates `ZERNIO_API_KEY`, and probes the Zernio API. `fetch.sh` is a universal fetcher — it handles Google Drive folders (gdown), Drive single files (URL-rewrite + curl), regular HTTPS URLs (curl -L), and local paths (copy). Try the scripts first. Ask only if they fail.
+`init.sh` sources `.env`, validates `ZERNIO_API_KEY`, and probes the Zernio API. `fetch.sh` handles Drive single files (URL-rewrite + curl, with virus-scan-page fallback), regular HTTPS URLs (curl -L), and local paths (copy) — pure bash, no external dependencies. Try the scripts first. Ask only if they fail.
 
-You have the full Claude Code toolkit: bash, curl, wget, gdown, ffmpeg, Python, vision, transcript extraction (whisperx / faster-whisper / AssemblyAI), file I/O. Use them.
+You have the full Claude Code toolkit: bash, curl, wget, ffmpeg, Python, vision, transcript extraction (whisperx / faster-whisper / AssemblyAI), file I/O, **web fetching**. Use them. You don't need external tools to handle a Drive link — you have everything required.
 
-- User drops a Google Drive link? **Run `fetch.sh` on it.** Don't ask if it's public — just try. Don't ask about MCP connectors — you don't need them.
+- User drops a Google Drive link? **Run `fetch.sh` on it.** It uses pure curl. Don't ask if it's public — just try. Don't ask about MCP connectors — you don't need them.
+- Drive folder (not a single file)? `fetch.sh` will tell you it can't handle folders via curl alone. You can either visit the folder URL with your web tools to inspect file IDs, or ask the user for individual file links or a local download — one question.
 - User wants short-form video from carousel images? Run `ffmpeg` (it's almost certainly installed).
 - Need to know what a video is about before drafting a caption? Extract the transcript.
 - Need to write hashtags for an image post? Look at the image — you have vision.

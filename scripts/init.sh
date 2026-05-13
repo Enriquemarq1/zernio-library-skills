@@ -92,9 +92,9 @@ cwd:               $(pwd)
 ZERNIO_API_KEY:    $KEY_STATUS
 zernio probe:      $PROBE_STATUS
 connected accounts: $ACCOUNTS_COUNT
-ffmpeg:            $(command -v ffmpeg >/dev/null && echo "yes ($(ffmpeg -version 2>&1 | head -1))" || echo "no — install for video conversion")
-gdown:             $(command -v gdown >/dev/null && echo "yes" || echo "no — pip install gdown for Drive folder fetches")
-jq:                $(command -v jq >/dev/null && echo "yes" || echo "no — install for JSON parsing")
+ffmpeg:            $(command -v ffmpeg >/dev/null && echo "yes" || echo "no — install for video conversion")
+curl:              $(command -v curl >/dev/null && echo "yes" || echo "no — required")
+jq:                $(command -v jq >/dev/null && echo "yes" || echo "no — optional, just nicer JSON parsing")
 
 EOF
 
