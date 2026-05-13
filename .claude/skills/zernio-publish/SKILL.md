@@ -1,212 +1,107 @@
 ---
 name: zernio-publish
-description: "Publish content from a manifest to any of 13 social platforms through Zernio — upload media, build per-platform post bodies, prompt for approval, schedule with staggered rollout, verify live, and log the result. Use when you have a finished content piece + a manifest.json describing where it should go."
+description: "Ship a content piece to one or many of 13 social platforms through Zernio. Handles media upload, per-platform post bodies, scheduled posting, verification, and logging. Use when the user wants to publish, post, ship, schedule, or distribute content."
 ---
 
-# Skill: Zernio Publish — One Manifest, Up to 13 Platforms
+# Skill: zernio-publish
 
-You hand this skill a `manifest.json` that names the platforms, the per-platform metadata, and the media files. The skill handles the rest:
+This skill is **support material** for shipping content via Zernio. You — the agent — are the actor. Read what's useful here, adapt to the user's situation, and use your judgment.
 
-```
-CHECK → UPLOAD → BUILD → APPROVE → POST → VERIFY → LOG
-```
-
-**Supported platforms (13):** YouTube, Instagram, TikTok, LinkedIn, X/Twitter, Threads, Facebook, Pinterest, Bluesky, Reddit, Snapchat, Telegram, Google Business.
-
-**What you need before running:**
-
-- A Zernio API key (resolved at runtime — see § Resolving the API key below)
-- A Zernio account with the platforms you want to post to already connected via the Zernio dashboard
-- A `manifest.json` (see `templates/manifest.json` and `examples/`)
-
-**Zero local config.** No `config.json`, no profile YAML, no env files beyond the API key. Account IDs are resolved at runtime from `GET /v1/accounts`. If a platform isn't connected in your Zernio dashboard, the skill fails with a clear message naming the platform.
+The skill covers 13 platforms: YouTube, Instagram, TikTok, LinkedIn, X/Twitter, Threads, Facebook, Pinterest, Bluesky, Reddit, Snapchat, Telegram, Google Business.
 
 ---
 
-## Resolving the API key
+## Hard rules — never break these
 
-**The API key is NEVER bundled in this skill, this repo, or any committed file.** It must come from the user at runtime. The resolution differs by runtime:
+1. **Never publish without explicit human approval.** Show the package (platforms, schedule, captions, media). Wait for "ship it" / "post" / "approved." Silence is not approval. There's no `--yes` flag, no env bypass.
+2. **Always verify after posting.** Zernio's 200 OK means the request was accepted, not that the destination platform rendered your fields. YouTube routinely drops title/tags/thumbnail silently. Hit oEmbed / the public URL / per-platform APIs to confirm.
+3. **`scheduledFor` 2-3 min ahead for multi-platform.** Never `publishNow: true` for multi-platform — it causes 30-second response times and duplicate posts.
+4. **Zernio only.** Never reach for Late MCP, Buffer, Hootsuite, n8n, or any alternative.
+5. **The manifest (whether you assemble it from chat or read it from disk) is the source of truth for the content.** Don't invent captions, titles, tags, or thumbnails. If a platform's required field is missing, name the field and the platform, ask the user.
 
-**Claude Code CLI (shell available):**
-
-1. Check `$ZERNIO_API_KEY` in the environment.
-2. If not set, check for a `.env` file next to the manifest, then at the project root. If found, source it (`set -a; source .env; set +a`).
-3. If set: use it directly in `Authorization: Bearer $ZERNIO_API_KEY` headers.
-4. If still not set after step 2 (or `.env` still has the placeholder value): surface a clear message and stop:
-   ```
-   ZERNIO_API_KEY is not set.
-     Option A: edit .env at the repo root and replace the placeholder
-               (then `git update-index --skip-worktree .env` to keep your
-                real key out of commits)
-     Option B: export ZERNIO_API_KEY="zk_xxx"   (macOS / Linux)
-               $env:ZERNIO_API_KEY = "zk_xxx"   (Windows PowerShell)
-   Get your key from https://zernio.com/dashboard/api-keys
-   ```
-
-**Claude.ai web (no shell — runs in chat UI):**
-
-1. At Step 1, ask the user (once per conversation):
-   > "Paste your Zernio API key — I'll hold it in memory for this conversation only. Get one at https://zernio.com/dashboard/api-keys."
-2. Hold the key in working memory for the rest of the conversation.
-3. Use it in every API call. **Never echo it back in chat output.** **Never write it to a file.**
-4. If the user starts a new conversation, ask again. The key does not persist across conversations.
-
-**Universal rules (both runtimes):**
-
-- Never write the key to disk inside this skill folder, the manifest, or any log file.
-- Never include the key in `./posts/*.json` output. The log records the Zernio response (post IDs, URLs) but not the auth header.
-- If a user pastes a key into a file (e.g., a config they intend to commit), refuse it and redirect them to the env var / chat paste path.
+Everything else is judgment.
 
 ---
 
-## Step 1: Check prerequisites
+## What you have to work with
 
-Run the pre-post checklist from `reference/principles.md`:
+**Inputs the user might give you:**
 
-- API key resolved (per § Resolving the API key above)
-- Manifest exists and parses as JSON
-- Every platform in `manifest.platforms` has the required fields for that platform (see `reference/platforms/{platform}.md`)
-- Media files referenced by `manifest.media.video` / `manifest.media.thumbnail` exist on disk
-- Thumbnail is JPEG (PNG → convert with `ffmpeg -i thumb.png -q:v 2 thumb.jpg`)
+- A path to a `manifest.json` (structured input)
+- A chat message describing what to post, where, when
+- A messy mix — caption pasted in chat, media file path, "post this to LinkedIn and Twitter"
+- Nothing — they typed `/zernio-post` cold
 
-If any check fails, stop and fix. Never improvise around a missing prerequisite — the failure modes are expensive (silent upload fails, rejected tags, duplicate posts).
+Whatever shape it's in, assemble what you need to make the Zernio API call. The manifest is an internal data structure — you can build it from chat. If the user has one, use it. If not, ask for the pieces you need.
 
-Resolve `accountId` per platform:
+**Tools / files:**
 
-```bash
-curl -s "https://zernio.com/api/v1/accounts" \
-  -H "Authorization: Bearer $ZERNIO_API_KEY"
-```
-
-Map `platform` → `id` for every platform named in `manifest.platforms`. Missing one = "{platform} is not connected in your Zernio dashboard."
-
----
-
-## Step 2: Upload media
-
-See `reference/zernio-upload.md` for the full flow:
-
-- Presign (lowercase `filename` / `contentType` — camelCase fails)
-- PUT with `--tls-max 1.2` on macOS
-- HEAD-verify both video and thumbnail return HTTP 200
-- **Files over 50 MB → mandatory external-storage fallback** (CRC32 bug in Zernio's presigned URLs kills large uploads mid-stream)
-
-Thumbnails must be JPEG 1280×720 for YouTube. Convert PNGs: `ffmpeg -i thumb.png -q:v 2 thumb.jpg`.
+- `templates/manifest.json` — the schema with inline help, useful as a reference
+- `examples/sample-post.json` — a worked example
+- `reference/zernio-api.md` — endpoints, auth, account model
+- `reference/zernio-upload.md` — presign → PUT → HEAD, the 50 MB CRC32 workaround
+- `reference/zernio-post.md` — POST body shape, 10 field placement rules
+- `reference/platforms/{platform}.md` — per-platform deep dives (13 files)
+- `reference/platforms.md` — capability matrix across all 13
+- `reference/zernio-openapi.yaml` — canonical 17K-line OpenAPI spec (source of truth if other docs disagree)
 
 ---
 
-## Step 3: Build post body
+## API key
 
-See `reference/zernio-post.md` for the POST body shape and the 10 critical field placement rules. The essentials to remember:
+The key never lives in this skill, the manifest, or any committed file. Resolution differs by runtime:
 
-- `content` field = the caption / description / post body for every platform (not `platformSpecificData.description`)
-- `platformSpecificData` is **flat** — `{ title, tags, firstComment, ... }` — never nested under the platform name
-- `mediaItems[].thumbnail` is a **plain string URL**, not an object
-- Tags as a **comma-separated string**, not a JSON array
-- `firstComment` MUST be in the create call — cannot be added via API after publish
+- **Claude Code CLI:** `$ZERNIO_API_KEY` env var, or source `.env` at the project root if present and the value isn't the placeholder `zk_replace_with_your_real_key`. Get one at https://zernio.com/dashboard/api-keys.
+- **Claude.ai web:** ask the user to paste the key in chat at the start; hold it in conversation memory; never echo it back; never write it to a file.
 
-See `reference/platforms.md` for per-platform `platformSpecificData` fields and capability matrix.
-
-**The manifest is the source of truth.** This skill never invents titles, captions, tags, or thumbnails. Whatever is in `manifest.platforms.{platform}` is exactly what ships. If a field is missing for a platform that requires it, fail at Step 1 with a clear message — don't guess.
+If the key isn't resolvable, ask once, kindly. Don't list it as a blocker.
 
 ---
 
-## Step 4: Approval gate (always — no bypass)
+## Suggested flow (adapt as needed)
 
-Present a single block showing:
+This is a flow that works — not a script you must execute. Adapt to the user's situation.
 
-```
-## Ready to post — please confirm
+**CHECK** — Do you know what they want to ship and where? Do you have media on disk (or a public URL)? Do you have the API key? Have you resolved `accountId` per platform via `GET /v1/accounts`?
 
-Platforms:       [list]
-Schedule:        [ISO datetime — 2-3 min ahead]
-Content preview: [first 3 lines per platform]
-Media:           [thumbnail URL + media URL]
-First comment:   [text, if applicable]
+**UPLOAD** — Presign + PUT + HEAD-verify each media file. Files >50 MB need the external-storage fallback (see `reference/zernio-upload.md` — Zernio's presigned URLs have a CRC32 bug for large files).
 
-Reply "ship it" / "post" / "approved" to publish, or tell me what to change.
-```
+**BUILD** — Assemble the POST body. The 10 field placement rules in `reference/zernio-post.md` are not optional — get them wrong and the post silently breaks. Highlights: `content` is the top-level caption, `platformSpecificData` is flat (not nested under platform name), `tags` is a comma-separated string (not array), `thumbnail` is a plain URL string (not an object), `firstComment` must be in the create call.
 
-**Wait for an affirmative.** Silence is not approval. "Looks good" / "ok" / "ship it" counts. "Let me think about it" does NOT.
+**APPROVE** — Show the user the full package: platforms, schedule, content preview per platform, media URLs, first comment. Wait for explicit OK. If they ask for changes, apply them and re-show the full block.
 
-If the user asks for a change, apply it and re-show the full block — never ship based on a partial re-approval.
+**POST** — `POST https://zernio.com/api/v1/posts` with the assembled body. Always `scheduledFor` for multi-platform.
 
-This skill has no auto-publish flag. Every post passes through this gate.
+**VERIFY** — Read the Zernio response. Per platform, after `scheduledFor + 60s` (retry once at +120s):
+- YouTube → `GET https://www.youtube.com/oembed?url={video_url}&format=json` confirms title + thumbnail
+- Others → HEAD the public URL; 200 = soft success
+- On mismatch, name the dropped field and offer a remediation
 
----
-
-## Step 5: POST via Zernio
-
-```bash
-curl -s -X POST "https://zernio.com/api/v1/posts" \
-  -H "Authorization: Bearer $ZERNIO_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d "$POST_BODY_JSON"
-```
-
-**Scheduling rule:** always use `scheduledFor` 2-3 minutes ahead of now for multi-platform posts. Never `publishNow: true` — it causes timeouts and duplicate posts. See `reference/zernio-post.md` § Scheduling Rules.
-
-Extract `postId` and `status` from each platform's response for Step 6.
+**LOG** — Write `./posts/YYYY-MM-DD-{slug}.json` with the Zernio response + per-platform verification verdict + ISO timestamp.
 
 ---
 
-## Step 6: Verify published (MANDATORY — verify, don't trust)
+## When something is out of scope
 
-**Zernio's 200 OK means the request was accepted, not that the platform applied the metadata.** YouTube routinely strips title/tags/thumbnail silently on accepted posts. Without this step, the skill reports "shipped" while you see a stripped post.
+This skill **ships** content. It doesn't:
 
-See `reference/principles.md` § Verification protocol for the protocol. The executable steps:
+- Generate captions, titles, hashtags, or thumbnails (those come from the user)
+- Render a video from images (carousel-to-video is a different problem)
+- Connect new Zernio accounts (the user does that in the Zernio dashboard)
+- Read from Google Drive / Dropbox without an explicit MCP / public URL the user provides
 
-1. Read the Zernio response — confirm all platforms returned a `postId`. Capture each platform's resolved `url`.
-2. `GET https://zernio.com/api/v1/posts/{postId}` — confirm Zernio echoes back what we sent (title, tags, firstComment, thumbnail).
-3. **Per-platform live verification** (run after `scheduledFor` + 60s, retry once at +120s):
-   - **YouTube** → hit oEmbed (`https://www.youtube.com/oembed?url={video_url}&format=json`) to confirm the title and thumbnail rendered live.
-   - **Other platforms** → HEAD the public URL with `curl -I`; if 200, treat as a soft success.
-4. **On mismatch**, name the specific dropped field and offer a remediation: retry, manual fix in the destination's studio, or escalate.
+When the user asks for something out of scope, say so plainly without judgment:
 
-**Never report success for a post that failed verification.** Log the verification result alongside the post so post-hoc audit sees the truth, not the hopeful 200.
+> "That part isn't what this skill does. Once you've `<got the file on disk / written the caption / connected the account>`, come back and I'll ship it."
 
----
-
-## Step 7: Log to disk
-
-Write `./posts/YYYY-MM-DD-{slug}.json` next to your manifest with:
-
-- The full Zernio response per platform (`postId`, `status`, `url`)
-- The media URLs that were uploaded
-- The verification result per platform (`published` / `mismatch` / `failed` + any dropped fields)
-- ISO timestamp of when the skill finished
-
-This is the durable trail. If something goes sideways later, this file is what you grep.
+Don't try to do the out-of-scope work with adjacent tools. Stay in lane.
 
 ---
 
-## Rules
+## When you're stuck
 
-1. **Follow `reference/principles.md`.** The non-negotiables live there — pre-post checklist, approval gate, verification protocol, anti-patterns.
-2. **NEVER post without explicit user approval.** Silence is never approval. This skill has no auto-publish flag.
-3. **Use `scheduledFor` 2-3 min ahead for multi-platform.** Never `publishNow: true` for multi-platform — it causes timeouts and duplicate posts.
-4. **Adapt content per platform.** Never copy-paste captions across platforms. See `reference/platforms.md`.
-5. **Run platform-specific pre-flight validation** before POST (YouTube tags, Instagram caption length, Twitter character count). See per-platform docs in `reference/platforms/`.
-6. **`firstComment` MUST be in the create call.** Cannot be added via API after publish.
-7. **Thumbnail as plain URL string**, not an object. Must be JPEG, uploaded to Zernio first.
-8. **`platformSpecificData` is flat**, not nested under the platform name.
-9. **Tags as comma-separated string**, not a JSON array.
-10. **Files >50 MB go through external-storage fallback.** Don't fight the CRC32 bug.
-11. **Use `--tls-max 1.2`** for all presigned PUT uploads on macOS.
-12. **HEAD-verify uploads** before creating the post. 404 = silent failure.
-13. **Log every post** to `./posts/`. Skill is NOT complete until the log is written.
-14. **Never invent metadata.** Titles, tags, captions, thumbnails all come from the manifest. If a required field is missing for a platform, fail at Step 1.
+The OpenAPI spec at `reference/zernio-openapi.yaml` is the source of truth if anything in the markdown files disagrees with it. Grep it.
 
----
+If you're missing context about a platform's quirks (allowed aspect ratios, character limits, pinned-comment support), read `reference/platforms/{platform}.md` for that specific one.
 
-## Reference files
-
-- `reference/principles.md` — Pre-post checklist, approval gate, verification protocol, anti-patterns
-- `reference/platforms.md` — Capability matrix + per-platform `platformSpecificData` fields + media specs + cross-posting strategy
-- `reference/zernio-api.md` — Master API reference (auth, endpoints, account model, CLI)
-- `reference/zernio-upload.md` — Presign → PUT → verify, CRC32 bug, external-storage fallback for files over 50 MB
-- `reference/zernio-post.md` — POST /v1/posts body shape, 10 critical field placement rules, scheduling rules, per-platform quick reference, YouTube-specific fields
-- `reference/zernio-openapi.yaml` — Canonical OpenAPI spec (the source of truth for field names and types)
-- `reference/platforms/{platform}.md` — Per-platform deep dive (one file per supported platform)
-
-For the manifest shape, see `templates/manifest.json` and the worked examples in `examples/`.
+If you genuinely can't make progress, surface the blocker to the user as a clear single question — not a checklist.

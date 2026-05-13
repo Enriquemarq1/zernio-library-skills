@@ -99,26 +99,28 @@ The key is **never bundled with this skill** and never lives inside `manifest.js
 }
 ```
 
-**4. Run it.**
+**4. Tell Claude what you want to ship.**
 
-In Claude Code (with the slash command installed):
+The manifest is optional. You can give Claude a manifest path, paste content in chat, or just describe what to post — Claude assembles what's needed and asks for anything missing.
+
+In Claude Code:
+```
+/zernio-post
+```
+or
 ```
 /zernio-post ./manifest.json
 ```
-
-Or by intent (no slash command needed, the skill picks it up):
+or just by intent:
 ```
-publish ./manifest.json to Zernio
-```
-
-On claude.ai web (after uploading the skill ZIP), just say:
-```
-Publish this manifest to Zernio. [paste manifest content]
+ship a LinkedIn post that says "<your text>" with this image: ./hero.jpg
 ```
 
-Either way, Claude walks the seven-step flow (check → upload → build → approve → POST → verify → log), shows you the package, waits for your approval, ships it, verifies it landed, and writes the result to `./posts/` (Claude Code) or surfaces it in chat (web).
+On claude.ai web (after uploading the skill ZIP), say what you want to publish, paste your media link or attach a file. Claude handles the API calls.
 
-You can also call the bare bash flow without Claude — see `scripts/post.sh`.
+Claude shows you the full package, waits for your approval, ships it, verifies it landed on each platform, and writes the result to `./posts/`. The hard rules — never auto-publish, always verify, scheduled not immediate, Zernio only — are in `CLAUDE.md`.
+
+For a bare-bash one-shot publish without Claude, see `scripts/post.sh`.
 
 ---
 
