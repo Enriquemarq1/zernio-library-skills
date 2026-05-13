@@ -9,6 +9,42 @@ You are publishing content to social media for the user via Zernio. This is end-
 
 The user gives you an asset and intent. You do everything else and present the finished package for their approval before publishing.
 
+---
+
+## First actions when this skill triggers (do these BEFORE asking the user anything)
+
+### 1. Load the environment
+
+Run this immediately:
+
+```bash
+source scripts/init.sh
+```
+
+That sources `.env` if it exists, validates `ZERNIO_API_KEY`, probes the Zernio API to confirm the key works, and tells you what's loaded. **Do this even if you "don't think you need to."** It's a 1-second check that prevents 20-minute confusion.
+
+If the script reports `ZERNIO_API_KEY: OK`, you're authenticated. Continue. If it reports `MISSING` or `PLACEHOLDER`, ask the user for the key — ONE question, not a checklist.
+
+### 2. Fetch whatever the user named
+
+If their message contained a URL, a Google Drive link, or a file path, fetch it NOW:
+
+```bash
+bash scripts/fetch.sh "<their-url-or-path>" ./media/
+```
+
+`fetch.sh` auto-detects Google Drive folders (uses `gdown`), Drive single files (converts share-URL to direct-download), regular HTTPS URLs (uses `curl -L`), and local paths (just copies). **Don't ask "is the Drive folder public?" or "do you have the MCP connector?"** Run the script. If it fails, the script tells you why and you can ask then. Try first.
+
+### 3. Look around
+
+```bash
+ls -la ./media/ ./examples/ 2>/dev/null
+```
+
+Maybe the user already has files staged from a prior turn. Knowing what's on disk shapes what you ask next.
+
+After these three actions, you have: the API key (or know it's missing), the media files (or know the fetch failed), and a picture of project state. **Now you can have a useful conversation.** Don't ask the user "where's your manifest" or "is the Drive public" — by the time you've done the above, you already know.
+
 ## Four invariants
 
 These prevent real damage. Don't bypass them:
@@ -26,24 +62,20 @@ Internalize these. Don't quote them at the user.
 
 ### Stage 1 — Intake: get the asset on disk
 
-The user might give you a file path, a URL, a Google Drive link, an instruction with no asset yet, or a folder. Get the actual files onto local disk before anything else.
+You should have already done this in the "First actions" section above via `bash scripts/fetch.sh "<url-or-path>" ./media/`. The script handles Drive folders, Drive single files, regular URLs, and local paths.
+
+If `fetch.sh` failed on a specific input, it told you why. Common cases and fixes:
+
+- **"Drive file is too large for direct curl path"** → install gdown: `pip install gdown` and retry.
+- **"Google Drive folder detected but gdown is not installed"** → install gdown or ask the user to download the folder locally.
+- **HTTP 4xx from curl** → the link may be private. Ask the user to make it public-share, or drop the file into the project locally. One question, then proceed.
+
+For media you fetched outside the script (e.g., direct download you orchestrated yourself), confirm it landed:
 
 ```bash
-# URL
-curl -L "<url>" -o ./media/asset.mp4
-
-# Google Drive single file (public share)
-# Convert "https://drive.google.com/file/d/FILE_ID/view" to:
-curl -L "https://drive.google.com/uc?export=download&id=FILE_ID" -o ./media/asset.mp4
-
-# Drive folder — fastest path is gdown (pip install gdown)
-gdown --folder "<drive-folder-url>" -O ./media/
-
-# Multiple URLs
-for url in $URLS; do curl -L "$url" -O; done
+ls -la ./media/
+file ./media/*    # confirm types
 ```
-
-If the link is private and not authenticated, ask the user to make it public-share OR drop the files into the project locally. One question. Move on.
 
 ### Stage 2 — Analyze: understand what the asset is
 
