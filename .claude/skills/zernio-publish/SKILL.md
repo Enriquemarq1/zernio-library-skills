@@ -90,7 +90,47 @@ curl -L --cookie /tmp/gc --cookie-jar /tmp/gc \
 cp "<path>" ./media/
 ```
 
-For a Google Drive **folder** URL (`/drive/folders/...`), curl alone can't list the contents because the folder page renders via JavaScript. Use your native web/fetch tools to inspect the folder page and extract file IDs, OR ask the user for a single-file share link, OR ask them to download the folder locally — ONE question, then proceed.
+For a Google Drive **folder** URL (`/drive/folders/...`), the folder page IS parseable via curl. The HTML embeds file IDs as JSON inside inline scripts. Pull all of them and download each by ID:
+
+```bash
+# 1. Fetch the folder page
+FOLDER_URL="<the user's folder share URL>"
+curl -sL "$FOLDER_URL" -o /tmp/drive-folder.html
+
+# 2. Extract all 33-char file ID candidates from the embedded JSON
+# (Drive file IDs are 28-44 chars of [A-Za-z0-9_-]; the folder ID itself is in the URL — exclude it)
+FOLDER_ID=$(echo "$FOLDER_URL" | grep -oE 'folders/[^/?]+' | cut -d/ -f2)
+grep -oE '"[A-Za-z0-9_-]{33}"' /tmp/drive-folder.html | sort -u | sed 's/"//g' | grep -v "^${FOLDER_ID}$" > /tmp/file-ids.txt
+echo "Files found: $(wc -l < /tmp/file-ids.txt)"
+
+# 3. Also pull the folder title (so you know the context)
+grep -oE '<title>[^<]+</title>' /tmp/drive-folder.html | head -1
+
+# 4. Download each file by ID (no auth needed for publicly shared files)
+mkdir -p ./media/
+i=0
+while read -r FID; do
+  i=$((i+1))
+  curl -sL --cookie /tmp/gc --cookie-jar /tmp/gc \
+    "https://drive.google.com/uc?export=download&id=$FID" \
+    -o "./media/file-${i}.tmp"
+  # Identify MIME type and rename appropriately
+  TYPE=$(file --brief --mime-type "./media/file-${i}.tmp")
+  case "$TYPE" in
+    video/mp4)        mv "./media/file-${i}.tmp" "./media/file-${i}.mp4" ;;
+    video/quicktime)  mv "./media/file-${i}.tmp" "./media/file-${i}.mov" ;;
+    image/png)        mv "./media/file-${i}.tmp" "./media/file-${i}.png" ;;
+    image/jpeg)       mv "./media/file-${i}.tmp" "./media/file-${i}.jpg" ;;
+    *)                echo "  file-${i}: unknown type ($TYPE), keeping .tmp" ;;
+  esac
+done < /tmp/file-ids.txt
+rm -f /tmp/drive-folder.html /tmp/file-ids.txt /tmp/gc
+ls -la ./media/
+```
+
+**Order matters for carousels.** If you got back `v1.png`, `v2.png`, `v3.png`, etc. (numbered slides), sort by the numeric prefix to preserve the user's intended sequence. If filenames don't encode order, ask the user once to confirm.
+
+If the folder is private (no `?usp=sharing` or the share permissions are restricted), the HTML will be a login wall. In that case, ask the user to make it public-share OR to drop the files into the project locally.
 
 ### 3. Look around
 
