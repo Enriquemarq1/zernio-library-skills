@@ -49,37 +49,56 @@ Run the conversion. Don't ask permission.
 
 ## First actions when this skill triggers (do these BEFORE asking the user anything)
 
-### 1. Load the environment
-
-Run this immediately:
+### 1. Load the API key
 
 ```bash
-source scripts/init.sh
+set -a; source .env 2>/dev/null; set +a
+echo "ZERNIO_API_KEY: ${ZERNIO_API_KEY:+set (${#ZERNIO_API_KEY} chars)}${ZERNIO_API_KEY:-NOT SET}"
 ```
 
-That sources `.env` if it exists, validates `ZERNIO_API_KEY`, probes the Zernio API to confirm the key works, and tells you what's loaded. **Do this even if you "don't think you need to."** It's a 1-second check that prevents 20-minute confusion.
+If the key is loaded, quickly probe Zernio to confirm it actually works:
 
-If the script reports `ZERNIO_API_KEY: OK`, you're authenticated. Continue. If it reports `MISSING` or `PLACEHOLDER`, ask the user for the key — ONE question, not a checklist.
+```bash
+curl -s -o /dev/null -w "HTTP %{http_code}\n" \
+  -H "Authorization: Bearer $ZERNIO_API_KEY" \
+  "https://zernio.com/api/v1/accounts"
+```
+
+200 = good. 401 = key is wrong (ask user to update `.env`). Anything else = network or Zernio issue.
+
+If the `.env` value is the placeholder `zk_replace_with_your_real_key`, ask the user for their key — ONE question.
 
 ### 2. Fetch whatever the user named
 
-If their message contained a URL, a Google Drive link, or a file path, fetch it NOW:
+For any URL, Drive link, or file path in the user's message, pull it onto disk now. Don't ask if it's public or if you need MCP auth — just try.
 
 ```bash
-bash scripts/fetch.sh "<their-url-or-path>" ./media/
+mkdir -p ./media/
+
+# Regular HTTPS URL
+curl -L --tls-max 1.2 -o "./media/$(basename '<url>')" "<url>"
+
+# Google Drive single file — rewrite the share URL to a direct-download URL
+# Share URL pattern: https://drive.google.com/file/d/FILE_ID/view?usp=sharing
+# Direct download:   https://drive.google.com/uc?export=download&id=FILE_ID
+FILE_ID="<extract from share URL>"
+curl -L --cookie /tmp/gc --cookie-jar /tmp/gc \
+  "https://drive.google.com/uc?export=download&id=$FILE_ID" -o ./media/drive-file
+# If the response is HTML (virus-scan warning page), grep for confirm=TOKEN and retry with &confirm=TOKEN
+
+# Local path
+cp "<path>" ./media/
 ```
 
-`fetch.sh` auto-detects Drive single files (converts the share-URL to a direct-download URL via pure curl, with virus-scan-warning fallback), regular HTTPS URLs (uses `curl -L`), and local paths (just copies). Pure bash + curl — no external dependencies. **Don't ask "is the Drive public?" or "do you have the MCP connector?"** Run the script. If it fails, the script tells you why.
+For a Google Drive **folder** URL (`/drive/folders/...`), curl alone can't list the contents because the folder page renders via JavaScript. Use your native web/fetch tools to inspect the folder page and extract file IDs, OR ask the user for a single-file share link, OR ask them to download the folder locally — ONE question, then proceed.
 
 ### 3. Look around
 
 ```bash
-ls -la ./media/ ./examples/ 2>/dev/null
+ls -la ./media/ 2>/dev/null
 ```
 
-Maybe the user already has files staged from a prior turn. Knowing what's on disk shapes what you ask next.
-
-After these three actions, you have: the API key (or know it's missing), the media files (or know the fetch failed), and a picture of project state. **Now you can have a useful conversation.** Don't ask the user "where's your manifest" or "is the Drive public" — by the time you've done the above, you already know.
+You now know: the API key state, what media you have, what's on disk. Don't enumerate any of this back at the user — proceed to the workflow.
 
 ## Four invariants
 
@@ -98,20 +117,14 @@ Internalize these. Don't quote them at the user.
 
 ### Stage 1 — Intake: get the asset on disk
 
-You should have already done this in the "First actions" section above via `bash scripts/fetch.sh "<url-or-path>" ./media/`. The script handles Drive folders, Drive single files, regular URLs, and local paths.
-
-If `fetch.sh` failed on a specific input, it told you why. Common cases and fixes:
-
-- **"Drive returned an HTML page instead of the file"** → the file may be private or the share permissions don't allow direct download. Ask the user to make it public, or share it as a downloaded file.
-- **"Drive folder URLs aren't supported"** → folder pages render via JS, so curl alone can't list them. Options: use your native web/fetch tools to load the folder page and extract file IDs, ask the user for individual file URLs, or ask them to download the folder locally and share the path.
-- **HTTP 4xx from curl** → the link may be private. Ask the user to make it public-share, or drop the file into the project locally. One question, then proceed.
-
-For media you fetched outside the script (e.g., direct download you orchestrated yourself), confirm it landed:
+You should have already done this in the "First actions" section above using `curl` / `cp`. Confirm what you got:
 
 ```bash
 ls -la ./media/
-file ./media/*    # confirm types
+file ./media/*    # confirm MIME types
 ```
+
+If a download returned HTML instead of media, the source is probably gated (private Drive, login wall, expired link). Ask the user once to either share a public URL or drop the file locally — then proceed.
 
 ### Stage 2 — Analyze: understand what the asset is
 

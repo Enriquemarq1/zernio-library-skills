@@ -1,6 +1,5 @@
-# Local post logs
+# Local publish logs Claude writes after shipping
 posts/
-*.log
 
 # Editor / OS
 .DS_Store
@@ -9,19 +8,15 @@ Thumbs.db
 .vscode/
 *.swp
 
-# Secrets (never commit)
-# Note: .env IS tracked here (ships with a placeholder). After cloning,
-# run `git update-index --skip-worktree .env` so your local edits with
-# the real key don't get staged. See the header comment in .env.
+# Secrets
+# Note: .env IS tracked here with a placeholder. After cloning, run
+# `git update-index --skip-worktree .env` so your local key edits never
+# get staged. See the header comment in .env.
 .env.local
 .env.keys
 *.pem
 *.key
 
-# Manifest staging (creators may stage drafts here)
+# Workspace folders the user might create for staging media
+media/
 drafts/
-
-# Node / Python by-products (in case anyone scripts around this repo)
-node_modules/
-__pycache__/
-*.pyc
