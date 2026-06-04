@@ -1,6 +1,13 @@
 # Zernio Library Skills
 
-A library of Claude Code skills for [Zernio](https://zernio.com). Today it ships **`zernio-publish`** — end-to-end social publishing across 13 platforms. More Zernio skills (analytics, calendaring, account management) will land alongside it over time.
+A library of Claude Code skills for [Zernio](https://zernio.com). It ships:
+- **`zernio-publish`** — end-to-end social publishing across 13 platforms.
+- **`zernio-comment-to-dm`** — build Instagram/Facebook comment-to-DM automations + DM
+  sequences on command. Tell Claude a post, a keyword, and the message — it creates the
+  Zernio automation and orchestrates the follow-up DMs, so you never click through a
+  dashboard or clone workflows. Reuse it for any new post/keyword in seconds.
+
+More Zernio skills (analytics, calendaring, account management) will land over time.
 
 You hand Claude an asset (video file, Drive link, image folder, URL) and tell it where to post. Claude analyzes it, drafts platform-tailored captions and titles and hashtags, converts formats if needed, uploads the media, shows you the full package for approval, schedules the post via the Zernio API, verifies it landed, and logs the result.
 
@@ -51,6 +58,10 @@ zernio-library-skills/
 │       │   ├── SKILL.md
 │       │   ├── reference/                       deep API + per-platform docs
 │       │   └── templates/manifest.json
+│       ├── zernio-comment-to-dm/              ← comment-to-DM automations + sequences
+│       │   ├── SKILL.md
+│       │   ├── reference/zernio-automations-api.md
+│       │   └── templates/automation.json
 │       └── skill-creator/                     ← Anthropic's official skill-creator
 │                                                  bundled for when you add more skills
 ├── .env                                       ← ZERNIO_API_KEY (placeholder until you fill it)

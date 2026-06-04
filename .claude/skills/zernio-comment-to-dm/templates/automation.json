@@ -1,0 +1,11 @@
+{
+  "_comment": "Copy → fill → POST to https://zernio.com/api/v1/automations with Bearer auth. One automation per keyword/post. Confirm with the user before isActive:true (goes live on a real audience).",
+  "profileId": "<your Zernio profileId — GET /profiles>",
+  "accountId": "<connected IG/FB accountId — GET /accounts>",
+  "platformPostId": "<the post this automation watches>",
+  "name": "GUIDE — free template",
+  "keywords": "GUIDE",
+  "dmMessage": "Hey! Here's the free template you asked for 👇 [link]. Want a quick walkthrough?",
+  "commentReply": "Check your DMs 📩",
+  "isActive": true
+}
