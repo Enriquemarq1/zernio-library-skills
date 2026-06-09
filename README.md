@@ -6,6 +6,12 @@ A library of Claude Code skills for [Zernio](https://zernio.com). It ships:
   sequences on command. Tell Claude a post, a keyword, and the message — it creates the
   Zernio automation and orchestrates the follow-up DMs, so you never click through a
   dashboard or clone workflows. Reuse it for any new post/keyword in seconds.
+- **`meta-ads-launch`** — launch Meta (Facebook/Instagram) ad batches through Zernio's ads
+  API. You decide the offer, copy, audience, and budget; Claude launches ALL your creative
+  variations in one call (1 campaign + 1 ad set + N ads), then immediately pauses the
+  campaign so nothing spends until you review and go live. Ships with the complete verified
+  Zernio ads API reference (multi-creative shapes, idempotency, pause/resume, targeting,
+  lead forms, click-to-WhatsApp). Requires the Zernio Ads add-on (included on usage-based plans).
 
 More Zernio skills (analytics, calendaring, account management) will land over time.
 
@@ -62,6 +68,10 @@ zernio-library-skills/
 │       │   ├── SKILL.md
 │       │   ├── reference/zernio-automations-api.md
 │       │   └── templates/automation.json
+│       ├── meta-ads-launch/                   ← Meta ad batches via Zernio's ads API
+│       │   ├── SKILL.md
+│       │   ├── reference/zernio-ads-api.md      the complete verified ads API reference
+│       │   └── templates/campaign-plan.json
 │       └── skill-creator/                     ← Anthropic's official skill-creator
 │                                                  bundled for when you add more skills
 ├── .env                                       ← ZERNIO_API_KEY (placeholder until you fill it)

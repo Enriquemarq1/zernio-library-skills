@@ -1,6 +1,6 @@
 # Zernio Library Skills
 
-A library of Claude Code skills for working with [Zernio](https://zernio.com). Right now it contains one skill — `zernio-publish` — for end-to-end social publishing. More Zernio-related skills (analytics, account management, content calendaring) get added to `.claude/skills/` as they're built.
+A library of Claude Code skills for working with [Zernio](https://zernio.com). It currently contains three skills — `zernio-publish` (end-to-end social publishing), `zernio-comment-to-dm` (comment-to-DM automations + DM sequences), and `meta-ads-launch` (Meta ad batches through Zernio's ads API, launch-then-pause). More Zernio-related skills (analytics, account management, content calendaring) get added to `.claude/skills/` as they're built.
 
 This is a **Claude Code skill repo**, not a runtime or SDK project. The agent (Claude) has its native toolkit available — bash, curl, ffmpeg, vision, transcript extraction, web fetching. The skill is *instructions* for using those tools well; it isn't a framework around them.
 
@@ -21,6 +21,16 @@ zernio-library-skills/
 │       │   │   ├── platforms/{platform}.md        per-platform deep dives (13 of them)
 │       │   │   └── zernio-openapi.yaml            canonical 17K-line OpenAPI spec
 │       │   └── templates/manifest.json           reference shape of a Zernio POST body
+│       │
+│       ├── zernio-comment-to-dm/              ← comment-to-DM automations + sequences
+│       │   ├── SKILL.md
+│       │   ├── reference/zernio-automations-api.md
+│       │   └── templates/automation.json
+│       │
+│       ├── meta-ads-launch/                   ← Meta ad batches via Zernio's ads API
+│       │   ├── SKILL.md                          launch-then-pause co-pilot (operator decides)
+│       │   ├── reference/zernio-ads-api.md       complete verified ads API reference
+│       │   └── templates/campaign-plan.json      multi-creative request template
 │       │
 │       └── skill-creator/                     ← Anthropic's official skill-creator (bundled)
 │                                                  use this when adding more skills to the library
