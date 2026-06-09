@@ -1,0 +1,39 @@
+{
+  "_comment": "POST https://zernio.com/api/v1/ads/create with Bearer auth + an Idempotency-Key header (UUID). Multi-creative shape: creatives[] (min 1, no max) -> 1 campaign + 1 ad set + N ads sharing budget/targeting. Each creative: headline, body, linkUrl, callToAction required + EXACTLY ONE of imageUrl or video{url,thumbnailUrl}. NO paused-on-create: immediately follow with PUT /v1/ads/campaigns/{platformCampaignId}/status {status:'paused', platform:'facebook'} so nothing spends. Operator decides copy/audience/budget; confirm before firing.",
+  "accountId": "<Zernio ads SocialAccount id — GET /v1/connect/facebook/ads or GET /v1/accounts>",
+  "adAccountId": "<Meta ad account — GET /v1/ads/accounts?accountId=...>",
+  "name": "Creative Test — <offer> — <YYYY-MM-DD>",
+  "goal": "traffic",
+  "budgetAmount": 5,
+  "budgetType": "daily",
+  "countries": ["US"],
+  "ageMin": 25,
+  "ageMax": 45,
+  "tracking": {
+    "pixelId": "<optional Meta Pixel id>",
+    "urlTags": [{ "key": "utm_source", "value": "meta" }]
+  },
+  "creatives": [
+    {
+      "name": "A — <angle A label>",
+      "headline": "<headline A>",
+      "body": "<angle A copy — operator's voice>",
+      "imageUrl": "https://<public image url A>",
+      "linkUrl": "<destination URL>",
+      "callToAction": "LEARN_MORE"
+    },
+    {
+      "name": "B — <angle B label>",
+      "headline": "<headline B>",
+      "body": "<angle B copy — operator's voice>",
+      "imageUrl": "https://<public image url B>",
+      "linkUrl": "<destination URL>",
+      "callToAction": "LEARN_MORE"
+    }
+  ],
+  "_after_create": {
+    "pause_immediately": "PUT /v1/ads/campaigns/{platformCampaignId}/status  body: {\"status\":\"paused\",\"platform\":\"facebook\"}",
+    "verify": "GET /v1/ads/tree — confirm 1 campaign / 1 ad set / N ads, paused",
+    "go_live": "ONLY on explicit human confirmation + restated budget: same status call with \"active\""
+  }
+}
