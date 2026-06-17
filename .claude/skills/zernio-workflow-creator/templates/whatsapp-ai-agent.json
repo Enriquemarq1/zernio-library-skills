@@ -1,0 +1,68 @@
+{
+  "_template": "24/7 WhatsApp AI agent — answers, qualifies, books. Replace <profileId>, <accountId>, the booking link in the systemPrompt, and the model. Then POST to /v1/workflows and /activate.",
+  "profileId": "<profileId>",
+  "accountId": "<accountId>",
+  "platform": "whatsapp",
+  "name": "WhatsApp AI Agent — booking",
+  "description": "24/7 AI agent: answers questions, qualifies, books a call. Built via zernio-workflow-creator.",
+  "nodes": [
+    {
+      "id": "trigger",
+      "type": "trigger",
+      "config": {
+        "triggerType": "inbound_message",
+        "matchType": "any",
+        "onlyFirstMessage": false
+      }
+    },
+    {
+      "id": "agent",
+      "type": "ai",
+      "config": {
+        "provider": "anthropic",
+        "model": "claude-sonnet-4-6",
+        "systemPrompt": "You are the friendly assistant for <BUSINESS NAME> on WhatsApp. Talk like a warm, direct human — short messages, one question at a time, never a wall of text. Your job: answer the person's questions about what we offer, understand what they need, and when it makes sense, invite them to book a call at <BOOKING LINK>. Do not invent prices or facts you weren't given — if you're unsure, say you'll have someone follow up. Keep it natural and helpful.",
+        "outputType": "text",
+        "saveAs": "aiReply"
+      }
+    },
+    {
+      "id": "reply",
+      "type": "send_message",
+      "config": {
+        "messageType": "text",
+        "text": "{{aiReply}}"
+      }
+    },
+    {
+      "id": "wait",
+      "type": "wait_for_reply",
+      "config": {
+        "timeoutMinutes": 1440,
+        "saveAs": "lastReply"
+      }
+    },
+    {
+      "id": "human",
+      "type": "handoff",
+      "config": {
+        "note": "AI node errored — needs a human.",
+        "assignTo": ""
+      }
+    },
+    {
+      "id": "done",
+      "type": "end",
+      "config": {}
+    }
+  ],
+  "edges": [
+    { "id": "e1", "source": "trigger", "target": "agent" },
+    { "id": "e2", "source": "agent", "target": "reply", "sourceHandle": "success" },
+    { "id": "e3", "source": "agent", "target": "human", "sourceHandle": "error" },
+    { "id": "e4", "source": "reply", "target": "wait" },
+    { "id": "e5", "source": "wait", "target": "agent", "sourceHandle": "reply" },
+    { "id": "e6", "source": "wait", "target": "done", "sourceHandle": "timeout" }
+  ],
+  "entryNodeId": "trigger"
+}

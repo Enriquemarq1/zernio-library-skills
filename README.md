@@ -12,6 +12,12 @@ A library of Claude Code skills for [Zernio](https://zernio.com). It ships:
   campaign so nothing spends until you review and go live. Ships with the complete verified
   Zernio ads API reference (multi-creative shapes, idempotency, pause/resume, targeting,
   lead forms, click-to-WhatsApp). Requires the Zernio Ads add-on (included on usage-based plans).
+- **`zernio-workflow-creator`** — build Zernio conversation Workflows, including 24/7 WhatsApp
+  AI agents, on command. Tell Claude what the agent should do (answer, qualify, book) and it
+  builds the whole node graph (trigger → AI node → reply → wait → loop) via Zernio's Workflow
+  API, activates it, and edits it later when you ask — no dragging nodes one by one. Pairs with
+  `zernio-comment-to-dm` (comment → DM → this AI agent runs the conversation). Ships the full
+  Workflow API reference (all 16 node types) + a ready WhatsApp AI-agent template.
 
 More Zernio skills (analytics, calendaring, account management) will land over time.
 
@@ -72,6 +78,10 @@ zernio-library-skills/
 │       │   ├── SKILL.md
 │       │   ├── reference/zernio-ads-api.md      the complete verified ads API reference
 │       │   └── templates/campaign-plan.json
+│       ├── zernio-workflow-creator/           ← Zernio Workflows + WhatsApp AI agents
+│       │   ├── SKILL.md
+│       │   ├── reference/zernio-workflows-api.md  full node/edge contract (16 node types)
+│       │   └── templates/whatsapp-ai-agent.json
 │       └── skill-creator/                     ← Anthropic's official skill-creator
 │                                                  bundled for when you add more skills
 ├── .env                                       ← ZERNIO_API_KEY (placeholder until you fill it)
