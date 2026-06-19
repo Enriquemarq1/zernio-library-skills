@@ -1,19 +1,32 @@
 {
-  "_template": "24/7 WhatsApp AI agent — answers, qualifies, books. Replace <profileId>, <accountId>, the booking link in the systemPrompt, and the model. Then POST to /v1/workflows and /activate.",
+  "_template": "THE WhatsApp AI agent — a 24/7 conversational agent with memory, a human-escape, and lead tagging. Copy it, replace <profileId> / <accountId> / the business details in systemPrompt / the model, strip every _ key, POST to /v1/workflows, then /activate. Works out of the box.",
+  "_what_it_does": "Replies to every inbound WhatsApp message with Claude, remembers the whole conversation, answers + qualifies + books, tags each lead so you can find them, hands off to a human on request or on any AI error.",
+  "_memory": "The AI node has no built-in history. The 'remember' set_variable appends each turn to {{history}}, and userPromptTemplate feeds {{history}} back — that's what gives multi-turn memory. Don't remove it.",
+  "_human_escape": "The 'route' condition checks each inbound message for a human request and jumps to handoff; everything else flows to the agent. If the rule never matches, it safely falls through to the agent.",
+  "_customize": "Edit systemPrompt for your business + booking ask. Swap model (claude-haiku-4-5 = cheaper/faster, claude-sonnet-4-6 = balanced, claude-opus-4-8 = strongest). Requires your Anthropic key stored in Zernio (BYOK); omit `provider` to use Zernio's built-in model instead.",
   "profileId": "<profileId>",
   "accountId": "<accountId>",
   "platform": "whatsapp",
-  "name": "WhatsApp AI Agent — booking",
-  "description": "24/7 AI agent: answers questions, qualifies, books a call. Built via zernio-workflow-creator.",
+  "name": "WhatsApp AI Agent",
+  "description": "24/7 WhatsApp AI agent with memory: answers, qualifies, books, tags leads, hands off to a human. Built via zernio-workflow-creator.",
   "nodes": [
     {
       "id": "trigger",
       "type": "trigger",
-      "config": {
-        "triggerType": "inbound_message",
-        "matchType": "any",
-        "onlyFirstMessage": false
-      }
+      "config": { "triggerType": "inbound_message", "matchType": "any", "onlyFirstMessage": false }
+    },
+    {
+      "id": "tag",
+      "type": "add_tag",
+      "config": { "tag": "whatsapp-ai-lead" }
+    },
+    {
+      "id": "route",
+      "type": "condition",
+      "config": { "rules": [
+        { "id": "wants_human", "variable": "lastMessage", "operator": "matches",
+          "value": "(?i)(human|real person|speak to (someone|a person)|talk to (someone|a person)|representative|customer service)" }
+      ] }
     },
     {
       "id": "agent",
@@ -21,34 +34,31 @@
       "config": {
         "provider": "anthropic",
         "model": "claude-sonnet-4-6",
-        "systemPrompt": "You are the friendly assistant for <BUSINESS NAME> on WhatsApp. Talk like a warm, direct human — short messages, one question at a time, never a wall of text. Your job: answer the person's questions about what we offer, understand what they need, and when it makes sense, invite them to book a call at <BOOKING LINK>. Do not invent prices or facts you weren't given — if you're unsure, say you'll have someone follow up. Keep it natural and helpful.",
+        "systemPrompt": "You are the friendly WhatsApp assistant for <BUSINESS>, handling an ongoing conversation. Talk like a warm, direct human — short messages, one question at a time, never a wall of text, a little emoji is fine. Use the conversation so far so you never repeat a question or re-introduce yourself. Answer what we offer, understand what they need, and when it makes sense invite them to book a call (<BOOKING LINK> — or collect their first name, best email, and a day/time and confirm someone will lock it in). Never invent prices, availability, or facts you weren't given; if unsure, say you'll have someone follow up. Keep it natural, helpful, and honest.",
+        "userPromptTemplate": "Conversation so far (oldest first; empty if this is their first message):\n{{history}}\n\nTheir new message:\n{{lastMessage}}\n\nWrite your next reply as the assistant.",
         "outputType": "text",
         "saveAs": "aiReply"
       }
     },
     {
+      "id": "remember",
+      "type": "set_variable",
+      "config": { "assignments": [ { "name": "history", "value": "{{history}}\nThem: {{lastMessage}}\nYou: {{aiReply}}" } ] }
+    },
+    {
       "id": "reply",
       "type": "send_message",
-      "config": {
-        "messageType": "text",
-        "text": "{{aiReply}}"
-      }
+      "config": { "messageType": "text", "text": "{{aiReply}}" }
     },
     {
       "id": "wait",
       "type": "wait_for_reply",
-      "config": {
-        "timeoutMinutes": 1440,
-        "saveAs": "lastReply"
-      }
+      "config": { "timeoutMinutes": 1440, "saveAs": "lastMessage" }
     },
     {
       "id": "human",
       "type": "handoff",
-      "config": {
-        "note": "AI node errored — needs a human.",
-        "assignTo": ""
-      }
+      "config": { "note": "Handed to a human (requested by the contact, or the AI errored).", "assignTo": "" }
     },
     {
       "id": "done",
@@ -57,12 +67,16 @@
     }
   ],
   "edges": [
-    { "id": "e1", "source": "trigger", "target": "agent" },
-    { "id": "e2", "source": "agent", "target": "reply", "sourceHandle": "success" },
-    { "id": "e3", "source": "agent", "target": "human", "sourceHandle": "error" },
-    { "id": "e4", "source": "reply", "target": "wait" },
-    { "id": "e5", "source": "wait", "target": "agent", "sourceHandle": "reply" },
-    { "id": "e6", "source": "wait", "target": "done", "sourceHandle": "timeout" }
+    { "id": "e1", "source": "trigger", "target": "tag" },
+    { "id": "e2", "source": "tag", "target": "route" },
+    { "id": "e3", "source": "route", "target": "human", "sourceHandle": "wants_human" },
+    { "id": "e4", "source": "route", "target": "agent", "sourceHandle": "default" },
+    { "id": "e5", "source": "agent", "target": "remember", "sourceHandle": "success" },
+    { "id": "e6", "source": "agent", "target": "human", "sourceHandle": "error" },
+    { "id": "e7", "source": "remember", "target": "reply" },
+    { "id": "e8", "source": "reply", "target": "wait" },
+    { "id": "e9", "source": "wait", "target": "route", "sourceHandle": "reply" },
+    { "id": "e10", "source": "wait", "target": "done", "sourceHandle": "timeout" }
   ],
   "entryNodeId": "trigger"
 }

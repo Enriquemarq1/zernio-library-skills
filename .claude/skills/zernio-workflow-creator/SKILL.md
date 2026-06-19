@@ -44,23 +44,47 @@ dragging, no cloning workflows.
 ## The recipe (Claude follows this)
 
 ### 1. Design the graph (the core)
-A 24/7 conversational AI agent is a small loop. Default shape:
+A 24/7 conversational AI agent is a small loop **with memory**. Default shape:
 
 ```
-trigger ──▶ ai(agent) ──success──▶ send_message(reply) ──▶ wait_for_reply ──reply──▶ ai(agent)   (loop)
-                  │                                              └────────timeout──▶ end
-                  └────error────▶ handoff (to a human)
+trigger ─▶ add_tag ─▶ condition(route) ─default─▶ ai(agent) ─success─▶ set_variable(remember) ─▶ send_message ─▶ wait_for_reply ─reply─▶ condition(route)  (loop)
+                            │ wants_human─▶ handoff               │ error─▶ handoff                                                      └────timeout─▶ end
 ```
 
 - **trigger** — `inbound_message` (optionally gated by `keywords` + `matchType`).
-- **ai** — `provider: anthropic`, your `model`, a `systemPrompt` that defines the agent's job
-  (tone, what to collect, when to offer the booking link), `saveAs: "aiReply"`.
+- **add_tag** — tag the contact once (e.g. `whatsapp-ai-lead`) so leads are findable. Put it
+  *before* the routing/AI so it fires a single time (the loop re-enters at `route`, not `tag`).
+- **condition (route) — the human-escape.** Check each inbound message for a human request
+  (`operator: matches`, a regex like `(?i)(human|real person|representative)`) → `handoff`; the
+  `'default'` handle flows to the AI. If the rule never matches it safely falls through to the agent.
+- **ai** — `provider: anthropic`, your `model`, a `systemPrompt` defining the job (tone, what to
+  collect, when to book), `userPromptTemplate` that feeds memory + the new message, `saveAs: "aiReply"`.
+- **set_variable (remember) — THE MEMORY TRICK.** The AI node has **no built-in conversation
+  history** (it only sees `systemPrompt` + `userPromptTemplate` per call). Without memory it
+  re-greets and re-asks every message. So append each turn to a `history` variable
+  (`value: "{{history}}\nThem: {{lastMessage}}\nYou: {{aiReply}}"`) and put `{{history}}` back in
+  `userPromptTemplate`. Now the agent has real multi-turn context.
 - **send_message** — `messageType: text`, `text: "{{aiReply}}"`.
-- **wait_for_reply** — `timeoutMinutes` + `saveAs`; `'reply'` edge loops back to the AI, `'timeout'` ends.
+- **wait_for_reply** — `timeoutMinutes` + `saveAs: "lastMessage"` (reuse the same var the AI reads);
+  `'reply'` edge loops back to the AI, `'timeout'` ends.
 - **handoff** — on the AI `'error'` edge, hand the conversation to a human.
 
-Copy-paste starting point: `templates/whatsapp-ai-agent.json`. Full node/edge contract +
-all 16 node types: `reference/zernio-workflows-api.md`.
+Copy-paste starting point: `templates/whatsapp-ai-agent.json` (this exact memory-enabled graph).
+Full node/edge contract + all 16 node types: `reference/zernio-workflows-api.md`.
+
+#### Gaps to design around (learned the hard way)
+- **Memory** — the #1 gap. Always add the `set_variable` accumulator above; a stateless agent feels broken.
+- **`userPromptTemplate` is REQUIRED** on the AI node (the spec marks it optional; the API rejects without it).
+  The inbound message arrives as `{{lastMessage}}`.
+- **BYOK** — `provider: anthropic` needs the user's Anthropic key stored in Zernio. If it's missing the
+  AI node errors → the `handoff` path fires (no reply). Verify by testing, or omit `provider` for the
+  built-in path. Always wire an `error` → `handoff` edge so failures degrade gracefully.
+- **Double-reply** — `onlyFirstMessage: false` + the wait-loop can let rapid messages spawn parallel
+  runs. If you see duplicate replies in testing, flip the trigger to `onlyFirstMessage: true`.
+- **Lead capture (advanced)** — to *persist* a booking, give the AI node a `tools:[{name:"save_lead",…}]`
+  and branch the `'tool:save_lead'` edge into `set_field` + `add_tag` + `handoff`. Verify how tool-call
+  args surface as variables before relying on it.
+- **Graph edits are draft/paused only** — to change a live workflow: `pause` → `PATCH` → `activate`.
 
 ### 2. Create it (one call, draft)
 ```bash

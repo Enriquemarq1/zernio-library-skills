@@ -1,6 +1,23 @@
 # Zernio Library Skills
 
-A library of Claude Code skills for [Zernio](https://zernio.com). It ships:
+A library of Claude Code skills for [Zernio](https://zernio.com).
+
+## ⭐ Featured: build a 24/7 WhatsApp AI agent
+
+The **`zernio-workflow-creator`** skill ships a ready-to-run **WhatsApp AI agent** template — a
+24/7 agent that answers, qualifies, and books your leads, with real conversation **memory**, a
+**"talk to a human"** escape, automatic **lead tagging**, and graceful **handoff** if the AI ever
+errors. You don't wire it node by node: tell Claude Code *"build a WhatsApp workflow with an AI
+agent that answers questions and books a call,"* and it builds the whole graph inside Zernio and
+activates it. Want a change? Say it — Claude pauses, edits, and reactivates.
+
+- Template: [`.claude/skills/zernio-workflow-creator/templates/whatsapp-ai-agent.json`](.claude/skills/zernio-workflow-creator/templates/whatsapp-ai-agent.json)
+- How it works (every node + the gaps to avoid): [`.claude/skills/zernio-workflow-creator/SKILL.md`](.claude/skills/zernio-workflow-creator/SKILL.md)
+- Needs: a WhatsApp number in Zernio + your Anthropic key stored (BYOK) for the Claude-powered agent.
+
+## All skills
+
+It ships:
 - **`zernio-publish`** — end-to-end social publishing across 13 platforms.
 - **`zernio-comment-to-dm`** — build Instagram/Facebook comment-to-DM automations + DM
   sequences on command. Tell Claude a post, a keyword, and the message — it creates the
