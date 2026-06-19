@@ -69,7 +69,7 @@ trigger ─▶ add_tag ─▶ condition(route) ─default─▶ ai(agent) ─suc
   `'reply'` edge loops back to the AI, `'timeout'` ends.
 - **handoff** — on the AI `'error'` edge, hand the conversation to a human.
 
-Copy-paste starting point: `templates/whatsapp-ai-agent.json` (this exact memory-enabled graph).
+Copy-paste starting point: `templates/whatsapp-customer-service-agent.json` (this exact memory-enabled graph; the systemPrompt is a fill-in-the-blank structure a business owner can complete in plain language).
 Full node/edge contract + all 16 node types: `reference/zernio-workflows-api.md`.
 
 #### Gaps to design around (learned the hard way)
@@ -126,4 +126,4 @@ curl -s -X PATCH "https://zernio.com/api/v1/workflows/<id>" \
 
 ## Reference
 - `reference/zernio-workflows-api.md` — full endpoint + node/edge contract (verified from docs.zernio.com).
-- `templates/whatsapp-ai-agent.json` — copy-paste 24/7 WhatsApp AI-agent workflow graph.
+- `templates/whatsapp-customer-service-agent.json` — copy-paste 24/7 WhatsApp customer-service agent (memory + human-escape + handoff); fill in the systemPrompt's `[BRACKETS]`.

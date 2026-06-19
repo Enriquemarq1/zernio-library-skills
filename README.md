@@ -2,16 +2,17 @@
 
 A library of Claude Code skills for [Zernio](https://zernio.com).
 
-## ⭐ Featured: build a 24/7 WhatsApp AI agent
+## ⭐ Featured: a 24/7 WhatsApp customer-service agent
 
-The **`zernio-workflow-creator`** skill ships a ready-to-run **WhatsApp AI agent** template — a
-24/7 agent that answers, qualifies, and books your leads, with real conversation **memory**, a
-**"talk to a human"** escape, automatic **lead tagging**, and graceful **handoff** if the AI ever
-errors. You don't wire it node by node: tell Claude Code *"build a WhatsApp workflow with an AI
-agent that answers questions and books a call,"* and it builds the whole graph inside Zernio and
-activates it. Want a change? Say it — Claude pauses, edits, and reactivates.
+The **`zernio-workflow-creator`** skill ships a ready-to-run **WhatsApp customer-service agent**
+template — a 24/7 agent that answers customer questions, helps resolve issues, and never drops the
+ball: real conversation **memory**, a **"talk to a human"** escape, conversation **tagging**, and
+graceful **handoff** if the AI ever errors. You don't wire it node by node — tell Claude Code
+*"build a WhatsApp customer-service agent,"* and it builds the whole graph inside Zernio and
+activates it. The only thing you edit is a **fill-in-the-blank prompt** (hours, what you offer,
+policies, FAQs, links) that any business owner can complete in plain language.
 
-- Template: [`.claude/skills/zernio-workflow-creator/templates/whatsapp-ai-agent.json`](.claude/skills/zernio-workflow-creator/templates/whatsapp-ai-agent.json)
+- Template: [`.claude/skills/zernio-workflow-creator/templates/whatsapp-customer-service-agent.json`](.claude/skills/zernio-workflow-creator/templates/whatsapp-customer-service-agent.json)
 - How it works (every node + the gaps to avoid): [`.claude/skills/zernio-workflow-creator/SKILL.md`](.claude/skills/zernio-workflow-creator/SKILL.md)
 - Needs: a WhatsApp number in Zernio + your Anthropic key stored (BYOK) for the Claude-powered agent.
 
@@ -29,12 +30,13 @@ It ships:
   campaign so nothing spends until you review and go live. Ships with the complete verified
   Zernio ads API reference (multi-creative shapes, idempotency, pause/resume, targeting,
   lead forms, click-to-WhatsApp). Requires the Zernio Ads add-on (included on usage-based plans).
-- **`zernio-workflow-creator`** — build Zernio conversation Workflows, including 24/7 WhatsApp
-  AI agents, on command. Tell Claude what the agent should do (answer, qualify, book) and it
-  builds the whole node graph (trigger → AI node → reply → wait → loop) via Zernio's Workflow
-  API, activates it, and edits it later when you ask — no dragging nodes one by one. Pairs with
-  `zernio-comment-to-dm` (comment → DM → this AI agent runs the conversation). Ships the full
-  Workflow API reference (all 16 node types) + a ready WhatsApp AI-agent template.
+- **`zernio-workflow-creator`** — build Zernio conversation Workflows, including a 24/7 WhatsApp
+  **customer-service agent**, on command. Tell Claude what the agent should do and it builds the
+  whole node graph (trigger → human-escape → AI node with memory → reply → wait → loop) via
+  Zernio's Workflow API, activates it, and edits it later when you ask — no dragging nodes one by
+  one. Pairs with `zernio-comment-to-dm` (comment → DM → this AI agent runs the conversation).
+  Ships the full Workflow API reference (all 16 node types) + a ready, fill-in-the-blank
+  customer-service agent template.
 
 More Zernio skills (analytics, calendaring, account management) will land over time.
 
@@ -98,7 +100,7 @@ zernio-library-skills/
 │       ├── zernio-workflow-creator/           ← Zernio Workflows + WhatsApp AI agents
 │       │   ├── SKILL.md
 │       │   ├── reference/zernio-workflows-api.md  full node/edge contract (16 node types)
-│       │   └── templates/whatsapp-ai-agent.json
+│       │   └── templates/whatsapp-customer-service-agent.json
 │       └── skill-creator/                     ← Anthropic's official skill-creator
 │                                                  bundled for when you add more skills
 ├── .env                                       ← ZERNIO_API_KEY (placeholder until you fill it)

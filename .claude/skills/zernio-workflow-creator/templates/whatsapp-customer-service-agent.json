@@ -1,0 +1,83 @@
+{
+  "_template": "THE WhatsApp customer-service agent — a 24/7 conversational agent with memory, a human-escape, and conversation tagging. Copy it, fill in the systemPrompt (all the [BRACKETS]), set <profileId> / <accountId> / the model, strip every _ key, POST to /v1/workflows, then /activate. Works out of the box.",
+  "_what_it_does": "Answers every inbound WhatsApp message with Claude, remembers the whole conversation, helps and resolves, tags each conversation, and hands off to a human on request or on any AI error.",
+  "_fill_in": "The ONLY thing you must edit is the systemPrompt: replace everything in [BRACKETS] with your business details (hours, what you offer, prices, policies, FAQs, links). A business owner can fill it in plain language — the clearer it is, the better the agent answers.",
+  "_memory": "The AI node has no built-in history. The 'remember' set_variable appends each turn to {{history}}, and userPromptTemplate feeds {{history}} back — that's what gives multi-turn memory. Don't remove it.",
+  "_human_escape": "The 'route' condition checks each inbound message for a human request and jumps to handoff; everything else flows to the agent. If the rule never matches, it safely falls through to the agent.",
+  "_customize": "Swap model (claude-haiku-4-5 = cheaper/faster, claude-sonnet-4-6 = balanced, claude-opus-4-8 = strongest). Requires your Anthropic key stored in Zernio (BYOK); omit `provider` to use Zernio's built-in model instead.",
+  "profileId": "<profileId>",
+  "accountId": "<accountId>",
+  "platform": "whatsapp",
+  "name": "WhatsApp Customer Service Agent",
+  "description": "24/7 WhatsApp customer-service agent with memory: answers, helps, resolves, escalates to a human. Built via zernio-workflow-creator.",
+  "nodes": [
+    {
+      "id": "trigger",
+      "type": "trigger",
+      "config": { "triggerType": "inbound_message", "matchType": "any", "onlyFirstMessage": false }
+    },
+    {
+      "id": "tag",
+      "type": "add_tag",
+      "config": { "tag": "whatsapp-support" }
+    },
+    {
+      "id": "route",
+      "type": "condition",
+      "config": { "rules": [
+        { "id": "wants_human", "variable": "lastMessage", "operator": "matches",
+          "value": "(?i)(human|real person|speak to (someone|a person)|talk to (someone|a person)|representative|customer service rep|agent)" }
+      ] }
+    },
+    {
+      "id": "agent",
+      "type": "ai",
+      "config": {
+        "provider": "anthropic",
+        "model": "claude-sonnet-4-6",
+        "systemPrompt": "# HOW TO USE THIS (delete this block once you've filled it in)\n# Replace everything in [BRACKETS] with your business details. Plain language is fine. The clearer you are, the better the agent answers.\n\n# ROLE\nYou are the 24/7 customer-service assistant for [BUSINESS NAME] on WhatsApp. [ONE LINE ABOUT THE BUSINESS — e.g. \"We sell handmade leather bags and ship worldwide.\"]\n\n# WHAT YOU DO\n- Answer customer questions clearly and quickly.\n- Help troubleshoot and resolve simple issues end to end.\n- Point the customer to the right link or next step.\n- Make every person feel heard and helped.\n\n# WHAT YOU KNOW (use ONLY this and the conversation so far — never guess)\n- Hours: [e.g. Mon-Fri 9am-6pm ET]\n- What we offer & prices: [list your products/services and prices]\n- Shipping / delivery: [your shipping info]\n- Returns / refunds: [your policy]\n- Common questions & answers: [Q: ... A: ...  |  Q: ... A: ...]\n- Useful links: [website, order tracking, help center, etc.]\n\n# STYLE\n- Warm, direct, human. Short messages, one point at a time, never a wall of text; a little emoji is fine.\n- Use the conversation so far - never repeat a question or re-introduce yourself.\n- Match the customer's language and tone.\n\n# RULES\n- Only use the facts above. If you don't know, say you'll check with the team - never invent prices, policies, order status, availability, or dates.\n- Don't promise refunds, discounts, or timelines you weren't told to offer.\n- Stay on customer service; don't go off-topic.\n\n# HAND OFF TO A HUMAN WHEN\n- They ask for a person, they're upset, or it's a complaint / billing / sensitive issue. Say you're connecting them to the team and stop trying to resolve it yourself.",
+        "userPromptTemplate": "Conversation so far (oldest first; empty if this is their first message):\n{{history}}\n\nTheir new message:\n{{lastMessage}}\n\nWrite your next reply as the customer-service assistant.",
+        "outputType": "text",
+        "saveAs": "aiReply"
+      }
+    },
+    {
+      "id": "remember",
+      "type": "set_variable",
+      "config": { "assignments": [ { "name": "history", "value": "{{history}}\nThem: {{lastMessage}}\nYou: {{aiReply}}" } ] }
+    },
+    {
+      "id": "reply",
+      "type": "send_message",
+      "config": { "messageType": "text", "text": "{{aiReply}}" }
+    },
+    {
+      "id": "wait",
+      "type": "wait_for_reply",
+      "config": { "timeoutMinutes": 1440, "saveAs": "lastMessage" }
+    },
+    {
+      "id": "human",
+      "type": "handoff",
+      "config": { "note": "Handed to a human (requested by the contact, or the AI errored).", "assignTo": "" }
+    },
+    {
+      "id": "done",
+      "type": "end",
+      "config": {}
+    }
+  ],
+  "edges": [
+    { "id": "e1", "source": "trigger", "target": "tag" },
+    { "id": "e2", "source": "tag", "target": "route" },
+    { "id": "e3", "source": "route", "target": "human", "sourceHandle": "wants_human" },
+    { "id": "e4", "source": "route", "target": "agent", "sourceHandle": "default" },
+    { "id": "e5", "source": "agent", "target": "remember", "sourceHandle": "success" },
+    { "id": "e6", "source": "agent", "target": "human", "sourceHandle": "error" },
+    { "id": "e7", "source": "remember", "target": "reply" },
+    { "id": "e8", "source": "reply", "target": "wait" },
+    { "id": "e9", "source": "wait", "target": "route", "sourceHandle": "reply" },
+    { "id": "e10", "source": "wait", "target": "done", "sourceHandle": "timeout" }
+  ],
+  "entryNodeId": "trigger"
+}
