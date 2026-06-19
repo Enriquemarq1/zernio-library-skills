@@ -74,13 +74,25 @@ Full node/edge contract + all 16 node types: `reference/zernio-workflows-api.md`
 
 #### Gaps to design around (learned the hard way)
 - **Memory** — the #1 gap. Always add the `set_variable` accumulator above; a stateless agent feels broken.
+  Two caveats: (1) it grows **unbounded** — the full transcript is re-sent every turn, so a long
+  conversation balloons input tokens; for long chats keep a sliding window (last N turns) or a rolling
+  summary, and set `maxTokens` on the AI node. (2) The self-referential `{{history}}` assignment assumes
+  it reads the *old* value before writing the new one — **not guaranteed by the spec; verify with a live test.**
+- **Empty AI reply** — an empty/whitespace text response still takes the AI `'success'` edge, so
+  `send_message` tries to send a blank message (WhatsApp rejects it) and `send_message` has **no error
+  handle** → the contact silently gets nothing. If it matters, add a `condition` (`aiReply` empty →
+  `handoff`) before the reply.
 - **`userPromptTemplate` is REQUIRED** on the AI node (the spec marks it optional; the API rejects without it).
   The inbound message arrives as `{{lastMessage}}`.
 - **BYOK** — `provider: anthropic` needs the user's Anthropic key stored in Zernio. If it's missing the
   AI node errors → the `handoff` path fires (no reply). Verify by testing, or omit `provider` for the
   built-in path. Always wire an `error` → `handoff` edge so failures degrade gracefully.
-- **Double-reply** — `onlyFirstMessage: false` + the wait-loop can let rapid messages spawn parallel
-  runs. If you see duplicate replies in testing, flip the trigger to `onlyFirstMessage: true`.
+- **Double-reply** — `onlyFirstMessage: false` + the wait-loop *may* let a rapid 2nd inbound spawn a
+  parallel run instead of resuming the waiting one → two replies. The spec does **not** guarantee one
+  run per conversation, and `onlyFirstMessage` is **undocumented** — so don't blindly flip it to `true`
+  (that can permanently silence repeat customers). **Test then decide:** fire two rapid inbounds on the
+  sandbox during the wait window and check `GET /v1/workflows/{id}/executions` — if you see two runs for
+  the same conversation, the race is real; only then weigh `onlyFirstMessage: true`.
 - **Lead capture (advanced)** — to *persist* a booking, give the AI node a `tools:[{name:"save_lead",…}]`
   and branch the `'tool:save_lead'` edge into `set_field` + `add_tag` + `handoff`. Verify how tool-call
   args surface as variables before relying on it.
