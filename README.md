@@ -19,6 +19,13 @@ A library of Claude Code skills for [Zernio](https://zernio.com). It ships:
   one. Pairs with `zernio-comment-to-dm` (comment → DM → this AI agent runs the conversation).
   Ships the full Workflow API reference (all 16 node types) + a ready, fill-in-the-blank
   customer-service agent template.
+- **`zernio-voice-agent`** — build a 24/7 WhatsApp **VOICE** AI agent: a Zernio workflow that
+  qualifies an inbound chat with Claude, then escalates to a **live AI voice call** answered by a
+  **Retell AI** voice agent (via the `start_call` node's `forwardTo` → Retell SIP/WebSocket endpoint).
+  Tell Claude what the agent should do and it builds the node graph (text qualify → `start_call` →
+  Retell, with permission/fallback handling), writes the Retell voice prompt, and wires the bridge.
+  Ships the Zernio WhatsApp-Calling reference + the Retell connection reference + a ready workflow
+  template + a fill-in-the-blank voice prompt (and a filled example). Pairs with `zernio-workflow-creator`.
 
 More Zernio skills (analytics, calendaring, account management) will land over time.
 
@@ -83,6 +90,14 @@ zernio-library-skills/
 │       │   ├── SKILL.md
 │       │   ├── reference/zernio-workflows-api.md  full node/edge contract (16 node types)
 │       │   └── templates/whatsapp-customer-service-agent.json
+│       ├── zernio-voice-agent/                ← WhatsApp VOICE AI agent (Zernio + Retell AI)
+│       │   ├── SKILL.md
+│       │   ├── reference/whatsapp-calling-api.md  Zernio WhatsApp Calling + start_call
+│       │   ├── reference/retell-voice-api.md      Retell connection (SIP / wss / Register API)
+│       │   └── templates/
+│       │       ├── whatsapp-voice-agent.workflow.json   text qualify → start_call → Retell
+│       │       ├── retell-voice-agent.base.md           fill-in-the-blank voice prompt
+│       │       └── retell-voice-agent.example.md        a filled voice prompt (booking)
 │       └── skill-creator/                     ← Anthropic's official skill-creator
 │                                                  bundled for when you add more skills
 ├── .env                                       ← ZERNIO_API_KEY (placeholder until you fill it)

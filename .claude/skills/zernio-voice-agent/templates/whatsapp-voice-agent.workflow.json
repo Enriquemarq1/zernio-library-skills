@@ -1,0 +1,133 @@
+{
+  "_template": "THE WhatsApp VOICE agent — a text agent on WhatsApp that qualifies in chat, then escalates the conversation to a LIVE AI voice call via Zernio's start_call node, with the call answered by a Retell AI voice agent (forwardTo a Retell SIP/WebSocket endpoint). Memory + human-escape + graceful call fallback. Copy it, fill the [BRACKETS] in the text agent's systemPrompt, set <profileId>/<accountId>/<model>, set <RETELL_FORWARD_URI>, strip every _ key, POST to /v1/workflows, then /activate.",
+  "_what_it_does": "1) Greets and qualifies every inbound WhatsApp message with Claude (text, with memory). 2) When the contact wants to talk it through, it offers a voice call. 3) On CALL, start_call rings the contact on WhatsApp and bridges the call to your Retell AI voice agent (forwardTo). 4) Falls back to text if the call can't connect; hands off to a human on request or AI error.",
+  "_two_tools_one_flow": "Zernio runs the messaging/orchestration + places the WhatsApp call. Retell AI runs the actual real-time voice conversation. start_call.forwardTo is the bridge between them.",
+  "_fill_in": [
+    "systemPrompt of the 'agent' (text) node — replace every [BRACKET] with your business details. Keep the part that offers a call and tells them to reply CALL.",
+    "<RETELL_FORWARD_URI> on the 'call' node's forwardTo — your Retell agent's inbound destination. Two supported shapes: SIP (sip:<retell-number-or-trunk>@sip.retellai.com) once you've imported a number in Retell and bound it to your agent_id, OR a WebSocket media endpoint (wss://...) per Zernio's WhatsApp Calling docs (Vapi/Retell/any voice agent). The Retell AGENT's own system prompt is a separate artifact — see retell-voice-agent.base.md."
+  ],
+  "_memory": "The text 'agent' node has no built-in history. The 'remember' set_variable appends each turn to {{history}}; userPromptTemplate feeds {{history}} back — that's the multi-turn memory. Don't remove it.",
+  "_human_escape": "The 'route' condition checks each inbound message for a human request and jumps to handoff; everything else flows to the text agent. The 'callcheck' condition routes a CALL/yes-style reply to start_call; anything else loops back to the agent.",
+  "_call_node": "start_call is WhatsApp-only. 'to' = the contact's WhatsApp number (verify the exact run variable Zernio exposes for the contact's number against a live execution; {{contactPhone}} is a placeholder). 'forwardTo' = where the call is bridged. 'requirePermissionFirst': true asks the contact to accept a call from your business (WhatsApp opt-in) — keep it on. 'recordingEnabled': false by default; only enable with consent + disclosure. saveAs stores the call result.",
+  "_customize": "Swap the text model (claude-haiku-4-5 = cheaper/faster, claude-sonnet-4-6 = balanced, claude-opus-4-8 = strongest). BYOK: store your Anthropic key in Zernio + set provider/model; omit provider for Zernio's built-in path. Retell is billed by your Retell account directly (separate from Zernio carrier charges).",
+  "profileId": "<profileId>",
+  "accountId": "<accountId>",
+  "platform": "whatsapp",
+  "name": "WhatsApp Voice AI Agent (Zernio + Retell)",
+  "description": "Qualifies inbound WhatsApp chats with Claude, then escalates to a live AI voice call answered by a Retell AI voice agent via start_call. Built via zernio-voice-agent.",
+  "nodes": [
+    {
+      "id": "trigger",
+      "type": "trigger",
+      "config": { "triggerType": "inbound_message", "matchType": "any", "onlyFirstMessage": false }
+    },
+    {
+      "id": "tag",
+      "type": "add_tag",
+      "config": { "tag": "whatsapp-voice-lead" }
+    },
+    {
+      "id": "route",
+      "type": "condition",
+      "config": { "rules": [
+        { "id": "wants_human", "variable": "lastMessage", "operator": "matches",
+          "value": "(?i)(human|real person|speak to (someone|a person)|talk to (someone|a person)|representative|customer service rep|agent)" }
+      ] }
+    },
+    {
+      "id": "agent",
+      "type": "ai",
+      "config": {
+        "provider": "anthropic",
+        "model": "claude-sonnet-4-6",
+        "systemPrompt": "# HOW TO USE THIS (delete this block once filled in)\n# Replace everything in [BRACKETS] with your business details. Plain language is fine. KEEP the part that offers a voice call.\n\n# ROLE\nYou are the WhatsApp assistant for [BUSINESS NAME]. [ONE LINE ABOUT THE BUSINESS]. You help people in chat AND you can put them on a quick live call with our AI voice agent when that's faster.\n\n# WHAT YOU DO\n- Answer questions clearly and quickly in chat.\n- Figure out what the person actually needs.\n- When their question is better handled by talking (it's detailed, they're deciding, or they ask to talk), OFFER a call: 'Want me to ring you here on WhatsApp so we can talk it through? Just reply CALL and I'll connect you in a few seconds.'\n- If they say yes / reply CALL, confirm warmly: 'Perfect — connecting you now. Tap to accept the call.'\n\n# WHAT YOU KNOW (use ONLY this and the conversation so far — never guess)\n- Hours: [e.g. Mon-Fri 9am-6pm ET]\n- What we offer & prices: [list]\n- Common questions & answers: [Q: ... A: ...]\n- Useful links: [website, booking, etc.]\n\n# STYLE\n- Warm, direct, human. Short messages, one point at a time, never a wall of text. A little emoji is fine.\n- Use the conversation so far — never repeat a question or re-introduce yourself.\n- Match the person's language and tone.\n\n# RULES\n- Only use the facts above. If you don't know, say you'll check — never invent prices, policies, availability, or dates.\n- Offer the call when it genuinely helps; don't force it every message.\n\n# HAND OFF TO A HUMAN WHEN\n- They ask for a person, they're upset, or it's a complaint / billing / sensitive issue.",
+        "userPromptTemplate": "Conversation so far (oldest first; empty if first message):\n{{history}}\n\nTheir new message:\n{{lastMessage}}\n\nWrite your next reply as the WhatsApp assistant. Offer a voice call when it would help.",
+        "outputType": "text",
+        "saveAs": "aiReply"
+      }
+    },
+    {
+      "id": "remember",
+      "type": "set_variable",
+      "config": { "assignments": [ { "name": "history", "value": "{{history}}\nThem: {{lastMessage}}\nYou: {{aiReply}}" } ] }
+    },
+    {
+      "id": "reply",
+      "type": "send_message",
+      "config": { "messageType": "text", "text": "{{aiReply}}" }
+    },
+    {
+      "id": "wait",
+      "type": "wait_for_reply",
+      "config": { "timeoutMinutes": 1440, "saveAs": "lastMessage" }
+    },
+    {
+      "id": "callcheck",
+      "type": "condition",
+      "config": { "rules": [
+        { "id": "wants_human", "variable": "lastMessage", "operator": "matches",
+          "value": "(?i)(human|real person|representative|agent)" },
+        { "id": "wants_call", "variable": "lastMessage", "operator": "matches",
+          "value": "(?i)(\\bcall\\b|ring me|call me|voice|yes,? call|let'?s talk|talk now)" }
+      ] }
+    },
+    {
+      "id": "call",
+      "type": "start_call",
+      "config": {
+        "to": "{{contactPhone}}",
+        "forwardTo": "<RETELL_FORWARD_URI>",
+        "requirePermissionFirst": true,
+        "recordingEnabled": false,
+        "saveAs": "callResult"
+      }
+    },
+    {
+      "id": "permmsg",
+      "type": "send_message",
+      "config": { "messageType": "text", "text": "I'd love to call you here on WhatsApp — please allow calls from us, then reply CALL again and I'll ring you. 📞" }
+    },
+    {
+      "id": "fallback",
+      "type": "send_message",
+      "config": { "messageType": "text", "text": "Hmm, I couldn't connect the call just now — let's keep going right here. What can I help with?" }
+    },
+    {
+      "id": "postcall",
+      "type": "send_message",
+      "config": { "messageType": "text", "text": "Thanks for hopping on the call! Anything else I can help you with here? 🙌" }
+    },
+    {
+      "id": "human",
+      "type": "handoff",
+      "config": { "note": "Handed to a human (requested by the contact, or the AI errored).", "assignTo": "" }
+    },
+    {
+      "id": "done",
+      "type": "end",
+      "config": {}
+    }
+  ],
+  "edges": [
+    { "id": "e1", "source": "trigger", "target": "tag" },
+    { "id": "e2", "source": "tag", "target": "route" },
+    { "id": "e3", "source": "route", "target": "human", "sourceHandle": "wants_human" },
+    { "id": "e4", "source": "route", "target": "agent", "sourceHandle": "default" },
+    { "id": "e5", "source": "agent", "target": "remember", "sourceHandle": "success" },
+    { "id": "e6", "source": "agent", "target": "human", "sourceHandle": "error" },
+    { "id": "e7", "source": "remember", "target": "reply" },
+    { "id": "e8", "source": "reply", "target": "wait" },
+    { "id": "e9", "source": "wait", "target": "callcheck", "sourceHandle": "reply" },
+    { "id": "e10", "source": "wait", "target": "done", "sourceHandle": "timeout" },
+    { "id": "e11", "source": "callcheck", "target": "human", "sourceHandle": "wants_human" },
+    { "id": "e12", "source": "callcheck", "target": "call", "sourceHandle": "wants_call" },
+    { "id": "e13", "source": "callcheck", "target": "agent", "sourceHandle": "default" },
+    { "id": "e14", "source": "call", "target": "postcall", "sourceHandle": "success" },
+    { "id": "e15", "source": "call", "target": "permmsg", "sourceHandle": "permission_required" },
+    { "id": "e16", "source": "call", "target": "fallback", "sourceHandle": "failed" },
+    { "id": "e17", "source": "postcall", "target": "wait" },
+    { "id": "e18", "source": "permmsg", "target": "wait" },
+    { "id": "e19", "source": "fallback", "target": "wait" }
+  ],
+  "entryNodeId": "trigger"
+}
