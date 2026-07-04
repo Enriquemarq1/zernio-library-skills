@@ -34,12 +34,40 @@ You hand Claude an asset (video file, Drive link, image folder, URL) and tell it
 
 ## Install
 
-Open the repo as your Claude Code project, or copy `.claude/skills/zernio-publish/` into any Claude Code project's `.claude/skills/` folder.
+Everything lives in one hidden folder: **`.claude/`** (note the dot — your file explorer may hide
+it). Claude Code automatically discovers any skill placed at `.claude/skills/<skill-name>/` in
+your project and loads it — that's the whole install mechanism.
+
+**Option A — use this repo as your project (simplest):**
 
 ```bash
-git clone https://github.com/Trejon-888/zernio-library-skills.git
+git clone https://github.com/Enriquemarq1/zernio-library-skills.git
 cd zernio-library-skills
+claude
 ```
+
+**Option B — you already have a project (and probably your own `.claude/` folder): MERGE, don't replace.**
+Your project's `.claude/` and this repo's `.claude/` are the same kind of folder. Do NOT overwrite
+yours — copy the skill folders you want *into* it, side by side with your existing skills:
+
+```bash
+# from inside your project
+cp -r /path/to/zernio-library-skills/.claude/skills/* .claude/skills/
+```
+
+```powershell
+# Windows PowerShell
+Copy-Item -Recurse \path\to\zernio-library-skills\.claude\skills\* .claude\skills\
+```
+
+Result: `your-project/.claude/skills/` now contains your own skills **plus** `zernio-publish`,
+`zernio-comment-to-dm`, `meta-ads-launch`, `zernio-workflow-creator`, `zernio-voice-agent`, …
+
+**Verify it worked:** restart Claude Code in the project and the skills appear as slash commands —
+type `/` and you'll see them (e.g. `/zernio-publish`) — and they also auto-trigger when you just
+describe the task ("post this video to TikTok", "make my WhatsApp answer calls with AI"). If you
+don't see them, the folders are probably nested one level too deep: the check is that
+`.claude/skills/zernio-publish/SKILL.md` exists at exactly that path in YOUR project.
 
 For claude.ai web (Skills upload UI), zip the skill folder yourself:
 

@@ -5,9 +5,10 @@ description: >-
   command. Tell Claude what the agent should do (answer questions, qualify, book a call) and it builds
   the whole node graph (trigger → AI node → reply → wait → loop) via Zernio, activates it, and edits it
   later when you ask — no dragging nodes one by one. Pairs with zernio-comment-to-dm (comment → DM →
-  this AI agent runs the conversation). Triggers on: "build a Zernio workflow", "make a WhatsApp AI
-  agent", "create an AI agent that answers my DMs", "add a step to the workflow", "edit the workflow",
-  "build a booking agent in Zernio".
+  this AI agent runs the conversation) and zernio-voice-agent (give the SAME number an AI VOICE that
+  answers phone calls — text brain here, voice brain there). Triggers on: "build a Zernio workflow",
+  "make a WhatsApp AI agent", "create an AI agent that answers my DMs", "add a step to the workflow",
+  "edit the workflow", "build a booking agent in Zernio".
 ---
 
 # zernio-workflow-creator
@@ -139,3 +140,10 @@ curl -s -X PATCH "https://zernio.com/api/v1/workflows/<id>" \
 ## Reference
 - `reference/zernio-workflows-api.md` — full endpoint + node/edge contract (verified from docs.zernio.com).
 - `templates/whatsapp-customer-service-agent.json` — copy-paste 24/7 WhatsApp customer-service agent (memory + human-escape + handoff); fill in the systemPrompt's `[BRACKETS]`.
+
+## Want the agent to TALK too? → `zernio-voice-agent`
+This skill builds the **text** brain. Its sibling skill `zernio-voice-agent` gives the SAME number
+an **AI voice** that answers actual phone calls (inbound WhatsApp Calling routed via `forwardTo` to
+a Retell AI agent), plus the front-desk workflow variant where the text agent detects call intent
+and sends the number's tap-to-call deep link. If the user mentions calls, voice, "it should pick up
+the phone", or an AI receptionist — switch to (or combine with) `zernio-voice-agent`.
