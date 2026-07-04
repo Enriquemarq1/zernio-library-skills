@@ -53,7 +53,7 @@ WhatsApp-only node. Config:
 - `failed` — couldn't connect. Fall back to text or hand off to a human. **Always wire this** —
   a dropped call with no fallback is a dead end.
 
-## B. The per-number routing config (alternative / always-on)
+## B. The per-number routing config — INBOUND calls (the proven path)
 
 `enableWhatsAppCalling` binds a destination to one of your WhatsApp numbers, so **every**
 inbound call to that number is routed — no workflow needed. Useful when you want the number
@@ -70,8 +70,34 @@ const { data } = await zernio.whatsappcalling.enableWhatsAppCalling({
 });
 ```
 
-`start_call` (A) is the right tool when the **agent decides** to escalate mid-conversation
-(our template). `enableWhatsAppCalling` (B) is right when **the number is the front door**.
+`start_call` (A) is the right tool when the **agent decides** to escalate mid-conversation —
+but it needs OUTBOUND rights (see gates). `enableWhatsAppCalling` / the calling config (B) is the
+front door: **customer-initiated inbound calls route to `forwardTo` automatically** — this is the
+live-proven path.
+
+### The verified REST endpoints (live-tested 2026-07)
+```
+POST   /api/v1/whatsapp/phone-numbers/{phoneNumberDocId}/calling   # enable + set destination
+       body: { "accountId": "...", "forwardTo": "sip:+1<number>@sip.retellai.com;transport=tcp",
+               "recordingEnabled": false }
+GET    /api/v1/whatsapp/calling?accountId=<accountId>              # read config
+       → { callingEnabled, forwardTo, callDeepLink, outboundDisabled, billingEligible,
+           messagingLimitTier, recordingEnabled, currentPeriodSpend }
+PATCH  /api/v1/whatsapp/phone-numbers/{id}/calling                 # update destination/recording
+DELETE /api/v1/whatsapp/phone-numbers/{id}/calling?accountId=...   # disable calling
+```
+- **`callDeepLink`** (`https://wa.me/call/<number>`) — the tap-to-call link; put it in your text
+  workflow so chat escalates to the voice agent with one tap.
+- **`outboundDisabled`** is separate from inbound — a number can take calls all day while
+  `start_call` still can't dial out.
+
+### The gates (each returns a specific error — check before building)
+1. **Plan:** 422 *"available on usage-based billing only"* — the Zernio account must be on the
+   usage-based plan; only the account **owner** can switch.
+2. **Messaging tier:** 422 *"requires a daily messaging limit of at least 2,000 recipients"* — a
+   fresh number (TIER_250) cannot call. The tier is earned: ~2× current limit in unique opted-in
+   recipients over 7 days, good quality (250→1K→10K). No payment/API/support bypass exists.
+3. `billingEligible: true` + `messagingLimitTier: TIER_2K`+ in the GET response = ready to enable.
 
 ---
 

@@ -1,0 +1,69 @@
+{
+  "_template": "THE PROVEN one — the AI FRONT DESK. One WhatsApp number: text it and the AI replies (with memory); ask to talk and it sends a TAP-TO-CALL link; tap it and your AI voice agent answers the call (inbound calling routed via forwardTo — see reference/whatsapp-calling-api.md). This graph is live-tested end to end. Copy it, fill the [BRACKETS] + <PLACEHOLDERS>, strip every _ key, POST to /v1/workflows, then /activate.",
+  "_what_it_does": "Answers every inbound WhatsApp text with a short, memory-enabled AI reply (same persona as your voice agent). Detects 'I want to talk' intent and sends the number's wa.me/call deep link so the contact taps and lands on the AI VOICE agent. Human-escape on request; handoff on AI error.",
+  "_prereqs": "1) Calling ENABLED on this WhatsApp number with forwardTo pointed at your voice agent (POST /v1/whatsapp/phone-numbers/{id}/calling — that's what makes the tapped call get ANSWERED). 2) Grab the callDeepLink from GET /v1/whatsapp/calling?accountId=... and paste it in the two spots marked <CALL_DEEP_LINK>.",
+  "_why_deep_link_not_start_call": "start_call (outbound) is gated separately — most numbers have outboundDisabled until Meta grants outbound. The tap-to-call deep link needs only INBOUND calling, works the moment forwardTo is set, and converts naturally (the contact chooses to call). Use start_call later if/when outbound unlocks (see whatsapp-voice-agent.workflow.json).",
+  "_gotcha_matches": "Condition regex ONLY works with operator 'matches'. With 'contains' the regex string is treated as a literal substring and the rule NEVER fires (everything falls through to the AI). This template ships them correct — keep them that way.",
+  "_memory": "The AI node has no built-in history. The 'remember' set_variable appends each turn to {{history}}; userPromptTemplate feeds it back. Don't remove it.",
+  "_one_persona": "Give the text agent and the voice agent the SAME name and warmth (this template + retell-voice-agent.base.md). Chat-to-call must feel like one assistant, not a transfer.",
+  "profileId": "<profileId>",
+  "accountId": "<accountId>",
+  "platform": "whatsapp",
+  "name": "WhatsApp AI Front Desk (text + tap-to-call voice)",
+  "description": "One number, full AI front desk: memory-enabled text agent + tap-to-call escalation to the AI voice agent (inbound calling via forwardTo). Built via zernio-voice-agent.",
+  "nodes": [
+    { "id": "trigger", "type": "trigger",
+      "config": { "triggerType": "inbound_message", "matchType": "any", "onlyFirstMessage": false } },
+    { "id": "tag", "type": "add_tag",
+      "config": { "tag": "whatsapp-front-desk" } },
+    { "id": "route", "type": "condition",
+      "config": { "rules": [
+        { "id": "wants_human", "variable": "lastMessage", "operator": "matches",
+          "value": "(?i)(human|real person|speak to (someone|a person)|representative|customer service)" }
+      ] } },
+    { "id": "agent", "type": "ai",
+      "config": {
+        "provider": "anthropic",
+        "model": "claude-sonnet-4-6",
+        "systemPrompt": "# ROLE\nYou are [AGENT NAME], the WhatsApp assistant for [BUSINESS NAME]. [ONE LINE ABOUT THE BUSINESS.] You also answer PHONE CALLS on this same number.\n\n# STYLE - HARD RULES\n- Maximum 1-2 short sentences per reply. Never a wall of text.\n- One question at a time. No lists, no headers. A little emoji is fine.\n- Use the conversation so far - never re-introduce yourself or repeat a question.\n- Match the person's language and tone.\n\n# WHAT YOU KNOW (use ONLY this - never guess)\n- [What you offer]\n- [Hours / area / how it works]\n- [Common questions -> answers]\n- You can talk by voice: if they call this number, you pick up.\n\n# OFFER THE CALL\n- When they'd rather talk, ask something detailed, or seem ready to move, offer the call once: \"Want to talk it through? Tap to call me and I'll pick up: <CALL_DEEP_LINK>\"\n\n# RULES\n- Never invent prices, timelines, or promises. [Offer the next step instead - e.g. a discovery call.]\n- Stay on [BUSINESS NAME] topics.\n- If they ask for a person, are upset, or it's billing/sensitive: say you're connecting the team and stop.",
+        "userPromptTemplate": "Conversation so far (oldest first; empty if this is their first message):\n{{history}}\n\nTheir new message:\n{{lastMessage}}\n\nWrite your next reply as the assistant.",
+        "outputType": "text",
+        "saveAs": "aiReply"
+      } },
+    { "id": "remember", "type": "set_variable",
+      "config": { "assignments": [ { "name": "history", "value": "{{history}}\nThem: {{lastMessage}}\nYou: {{aiReply}}" } ] } },
+    { "id": "reply", "type": "send_message",
+      "config": { "messageType": "text", "text": "{{aiReply}}" } },
+    { "id": "wait", "type": "wait_for_reply",
+      "config": { "timeoutMinutes": 1440, "saveAs": "lastMessage" } },
+    { "id": "callcheck", "type": "condition",
+      "config": { "rules": [
+        { "id": "wants_human", "variable": "lastMessage", "operator": "matches",
+          "value": "(?i)(human|real person|speak to (someone|a person)|representative|customer service)" },
+        { "id": "wants_call", "variable": "lastMessage", "operator": "matches",
+          "value": "(?i)(\\bcall\\b|\\bring\\b|\\bphone\\b|\\bvoice\\b|\\bllama|\\bllamar)" }
+      ] } },
+    { "id": "callinvite", "type": "send_message",
+      "config": { "messageType": "text", "text": "Of course — tap here and I'll pick up right now 📞 <CALL_DEEP_LINK>" } },
+    { "id": "human", "type": "handoff",
+      "config": { "note": "Handed to a human (requested by the contact, or the AI errored)." } },
+    { "id": "done", "type": "end", "config": {} }
+  ],
+  "edges": [
+    { "id": "e1",  "source": "trigger",   "target": "tag" },
+    { "id": "e2",  "source": "tag",       "target": "route" },
+    { "id": "e3",  "source": "route",     "target": "human",      "sourceHandle": "wants_human" },
+    { "id": "e4",  "source": "route",     "target": "agent",      "sourceHandle": "default" },
+    { "id": "e5",  "source": "agent",     "target": "remember",   "sourceHandle": "success" },
+    { "id": "e6",  "source": "agent",     "target": "human",      "sourceHandle": "error" },
+    { "id": "e7",  "source": "remember",  "target": "reply" },
+    { "id": "e8",  "source": "reply",     "target": "wait" },
+    { "id": "e9",  "source": "wait",      "target": "callcheck",  "sourceHandle": "reply" },
+    { "id": "e10", "source": "wait",      "target": "done",       "sourceHandle": "timeout" },
+    { "id": "e11", "source": "callcheck", "target": "human",      "sourceHandle": "wants_human" },
+    { "id": "e12", "source": "callcheck", "target": "callinvite", "sourceHandle": "wants_call" },
+    { "id": "e13", "source": "callcheck", "target": "agent",      "sourceHandle": "default" },
+    { "id": "e14", "source": "callinvite","target": "wait" }
+  ],
+  "entryNodeId": "trigger"
+}

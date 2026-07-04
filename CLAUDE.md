@@ -1,6 +1,6 @@
 # Zernio Library Skills
 
-A library of Claude Code skills for working with [Zernio](https://zernio.com). It currently contains five skills — `zernio-publish` (end-to-end social publishing), `zernio-comment-to-dm` (comment-to-DM automations + DM sequences), `meta-ads-launch` (Meta ad batches through Zernio's ads API, launch-then-pause), `zernio-workflow-creator` (Zernio conversation Workflows / WhatsApp text AI agents), and `zernio-voice-agent` (WhatsApp VOICE AI agent — Zernio `start_call` bridged to a Retell AI voice agent). More Zernio-related skills (analytics, account management, content calendaring) get added to `.claude/skills/` as they're built.
+A library of Claude Code skills for working with [Zernio](https://zernio.com). It currently contains five skills — `zernio-publish` (end-to-end social publishing), `zernio-comment-to-dm` (comment-to-DM automations + DM sequences), `meta-ads-launch` (Meta ad batches through Zernio's ads API, launch-then-pause), `zernio-workflow-creator` (Zernio conversation Workflows / WhatsApp text AI agents), and `zernio-voice-agent` (WhatsApp AI front desk — text agent + inbound calls routed via `forwardTo` to a Retell AI voice agent on one number). More Zernio-related skills (analytics, account management, content calendaring) get added to `.claude/skills/` as they're built.
 
 This is a **Claude Code skill repo**, not a runtime or SDK project. The agent (Claude) has its native toolkit available — bash, curl, ffmpeg, vision, transcript extraction, web fetching. The skill is *instructions* for using those tools well; it isn't a framework around them.
 
@@ -37,14 +37,15 @@ zernio-library-skills/
 │       │   ├── reference/zernio-workflows-api.md  full node/edge contract (16 node types)
 │       │   └── templates/whatsapp-customer-service-agent.json
 │       │
-│       ├── zernio-voice-agent/                ← WhatsApp VOICE AI agent (Zernio + Retell AI)
-│       │   ├── SKILL.md                          architecture: text qualify → start_call → Retell
-│       │   ├── reference/whatsapp-calling-api.md  Zernio WhatsApp Calling + start_call node
-│       │   ├── reference/retell-voice-api.md      Retell connection (SIP / wss / Register API)
+│       ├── zernio-voice-agent/                ← WhatsApp AI FRONT DESK (Zernio + Retell AI)
+│       │   ├── SKILL.md                          text + voice on one number, inbound-first
+│       │   ├── reference/whatsapp-calling-api.md  verified calling endpoints + gates + start_call
+│       │   ├── reference/retell-voice-api.md      Retell wiring (inbound_agents / SIP / wss)
 │       │   └── templates/
-│       │       ├── whatsapp-voice-agent.workflow.json   the Zernio workflow graph
-│       │       ├── retell-voice-agent.base.md           fill-in-the-blank voice prompt
-│       │       └── retell-voice-agent.example.md        a filled voice prompt (booking)
+│       │       ├── whatsapp-ai-front-desk.workflow.json  THE proven graph (text + tap-to-call)
+│       │       ├── whatsapp-voice-agent.workflow.json    outbound start_call variant
+│       │       ├── retell-voice-agent.base.md            fill-in-the-blank voice prompt
+│       │       └── retell-voice-agent.example.md         a filled voice prompt (booking)
 │       │
 │       └── skill-creator/                     ← Anthropic's official skill-creator (bundled)
 │                                                  use this when adding more skills to the library

@@ -19,13 +19,14 @@ A library of Claude Code skills for [Zernio](https://zernio.com). It ships:
   one. Pairs with `zernio-comment-to-dm` (comment → DM → this AI agent runs the conversation).
   Ships the full Workflow API reference (all 16 node types) + a ready, fill-in-the-blank
   customer-service agent template.
-- **`zernio-voice-agent`** — build a 24/7 WhatsApp **VOICE** AI agent: a Zernio workflow that
-  qualifies an inbound chat with Claude, then escalates to a **live AI voice call** answered by a
-  **Retell AI** voice agent (via the `start_call` node's `forwardTo` → Retell SIP/WebSocket endpoint).
-  Tell Claude what the agent should do and it builds the node graph (text qualify → `start_call` →
-  Retell, with permission/fallback handling), writes the Retell voice prompt, and wires the bridge.
-  Ships the Zernio WhatsApp-Calling reference + the Retell connection reference + a ready workflow
-  template + a fill-in-the-blank voice prompt (and a filled example). Pairs with `zernio-workflow-creator`.
+- **`zernio-voice-agent`** — give ONE WhatsApp number a full **AI front desk**: text it and an AI
+  replies (memory-enabled Zernio workflow); **call it and an AI voice picks up** (Zernio WhatsApp
+  Calling routes inbound calls via `forwardTo` to a **Retell AI** voice agent). Live-proven
+  inbound-first: the text agent detects call intent and sends the number's tap-to-call deep link;
+  the tapped call lands on the voice agent. Ships the verified calling endpoints + gates (plan +
+  messaging-tier), the Retell wiring reference, the proven front-desk workflow template, an
+  outbound `start_call` variant, and fill-in-the-blank voice prompts. Pairs with
+  `zernio-workflow-creator`.
 
 More Zernio skills (analytics, calendaring, account management) will land over time.
 
@@ -90,14 +91,15 @@ zernio-library-skills/
 │       │   ├── SKILL.md
 │       │   ├── reference/zernio-workflows-api.md  full node/edge contract (16 node types)
 │       │   └── templates/whatsapp-customer-service-agent.json
-│       ├── zernio-voice-agent/                ← WhatsApp VOICE AI agent (Zernio + Retell AI)
-│       │   ├── SKILL.md
-│       │   ├── reference/whatsapp-calling-api.md  Zernio WhatsApp Calling + start_call
-│       │   ├── reference/retell-voice-api.md      Retell connection (SIP / wss / Register API)
+│       ├── zernio-voice-agent/                ← WhatsApp AI FRONT DESK (Zernio + Retell AI)
+│       │   ├── SKILL.md                          text + voice on one number, inbound-first
+│       │   ├── reference/whatsapp-calling-api.md  verified calling endpoints + gates + start_call
+│       │   ├── reference/retell-voice-api.md      Retell wiring (inbound_agents / SIP / wss)
 │       │   └── templates/
-│       │       ├── whatsapp-voice-agent.workflow.json   text qualify → start_call → Retell
-│       │       ├── retell-voice-agent.base.md           fill-in-the-blank voice prompt
-│       │       └── retell-voice-agent.example.md        a filled voice prompt (booking)
+│       │       ├── whatsapp-ai-front-desk.workflow.json  THE proven graph (text + tap-to-call)
+│       │       ├── whatsapp-voice-agent.workflow.json    outbound start_call variant
+│       │       ├── retell-voice-agent.base.md            fill-in-the-blank voice prompt
+│       │       └── retell-voice-agent.example.md         a filled voice prompt (booking)
 │       └── skill-creator/                     ← Anthropic's official skill-creator
 │                                                  bundled for when you add more skills
 ├── .env                                       ← ZERNIO_API_KEY (placeholder until you fill it)

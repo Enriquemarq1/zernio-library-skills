@@ -1,128 +1,126 @@
 ---
 name: zernio-voice-agent
 description: >-
-  Build a WhatsApp VOICE AI agent — a Zernio workflow that qualifies an inbound WhatsApp chat with
-  Claude, then escalates to a LIVE AI voice call answered by a Retell AI voice agent (via the start_call
-  node's forwardTo → Retell SIP/WebSocket endpoint). Claude builds the node graph, wires the Retell
-  bridge, and writes the Retell voice-agent prompt. Pairs with zernio-workflow-creator (the text agent)
-  and zernio-comment-to-dm (comment → DM → this). Triggers on: "build a WhatsApp voice agent", "AI
-  voice agent on WhatsApp", "connect Retell to Zernio", "make my WhatsApp answer calls with AI", "voice
-  AI agent workflow", "add a voice call to my Zernio workflow".
+  Give ONE WhatsApp number a full AI front desk — text it and an AI replies (Zernio workflow with
+  memory); CALL it and an AI voice picks up (Zernio WhatsApp Calling routes inbound calls via
+  forwardTo to a Retell AI voice agent). Claude wires the whole thing: the Retell agent + voice
+  prompt, the calling config on the number, and the text workflow with a tap-to-call escalation.
+  Live-proven inbound-first; also covers the outbound start_call node for when Meta grants outbound.
+  Triggers on: "AI answers my WhatsApp calls", "WhatsApp voice agent", "AI receptionist on
+  WhatsApp", "connect Retell to Zernio", "route my WhatsApp calls to an AI", "AI front desk".
 ---
 
 # zernio-voice-agent
 
-Build a **WhatsApp Voice AI agent** by asking Claude. Two tools, one flow:
+One WhatsApp number, full AI front desk. **Text it → an AI answers in chat. Call it → an AI voice
+picks up.** Two tools, one bridge:
 
-- **Zernio** runs the messaging + orchestration and **places the WhatsApp call** (`start_call`).
-- **Retell AI** runs the **real-time voice conversation** (STT → LLM → TTS, low-latency, human-sounding).
-- The bridge between them is one field: **`start_call.forwardTo`** → a Retell SIP/WebSocket endpoint.
+- **Zernio** owns the WhatsApp number: the text workflow (chat brain) **and** the call routing.
+- **Retell AI** is the voice: real-time listen → think → talk, human-sounding.
+- The bridge is one field: the number's **`forwardTo`** → your Retell agent's SIP/wss endpoint.
 
-> **The skill informs; the agent acts.** This file + the two `reference/` docs give Claude the full
-> contract. Claude builds the node graph, creates it through the Zernio API, and writes the Retell
-> agent's prompt. **You stay in control** — Claude shows you the graph + both prompts and confirms
-> before creating or activating (it goes live on a real number, and a call costs money).
+> **The skill informs; the agent acts.** This file + `reference/` give Claude the verified
+> contract. **You stay in control** — Claude shows you both prompts, the graph, and the calling
+> config before creating or activating anything (it goes live on a real business number).
 
-## The architecture (memorize this)
+## The architecture (live-proven shape)
 
 ```
-WhatsApp inbound message
-   └─▶ Zernio workflow: tag ─▶ human-escape ─▶ [ai] greet + qualify (text, with memory) ─▶ reply ─▶ wait
-                                                          │
-                                  contact replies "CALL"  ▼
-                                              [start_call]  forwardTo ──▶  Retell AI voice agent
-                                                  │ success → post-call text          (answers, talks, books)
-                                                  │ permission_required → ask + loop
-                                                  └ failed → fall back to text
+                       ONE WhatsApp NUMBER (Zernio, calling-eligible)
+                      /                                              \
+   TEXT: inbound message                                    CALL: inbound WhatsApp call
+        │                                                            │
+   Zernio workflow: tag → human-escape → ai (memory) → reply → wait  │ number's calling config:
+        │  contact asks to TALK                                      │ forwardTo: sip:<retell>@sip.retellai.com
+        └─▶ send TAP-TO-CALL deep link (wa.me/call/<number>) ────────┤
+                                                                     ▼
+                                                        Retell voice agent ANSWERS
+                                                     (same persona as the text agent)
 ```
 
-Two brains, kept consistent: the **Zernio `ai` node** triages in chat; the **Retell agent** talks on
-the call. Same name, same warmth, so it feels like one assistant.
-
-## What you can ask
-- "Build me a WhatsApp voice agent that books appointments."
-- "When someone DMs and wants to talk, have an AI voice agent call them."
-- "Connect my Retell agent to my Zernio WhatsApp number."
-- "Write the voice prompt for the Retell agent."
+**Why tap-to-call instead of the outbound `start_call` node:** outbound calling is gated
+separately by Meta (`outboundDisabled` stays true on most numbers). The deep link needs only
+INBOUND calling, works the moment `forwardTo` is set, and converts better anyway — the contact
+chooses to call. Keep `start_call` for when outbound unlocks.
 
 ## What Claude needs (ask once, remember in-session)
-1. **ZERNIO_API_KEY** — `Authorization: Bearer <key>` (zernio.com → Settings → API keys).
-2. **profileId + accountId** — `GET /v1/profiles`, `GET /v1/accounts`.
-3. **A WhatsApp Business CALLING number bought + KYC'd inside Zernio** — `start_call` is WhatsApp-only
-   and needs a real, verified number. **KYC can take days — start it first.** (Text-only testing works
-   on the sandbox; the voice bridge needs the live number.) See `reference/whatsapp-calling-api.md`.
-4. **A Retell AI account + a built agent** (voice, model, and the prompt from `templates/retell-voice-agent.base.md`),
-   exposed for inbound calls — see `reference/retell-voice-api.md` for the SIP-bound-agent setup.
-5. The **business details** in plain words — for BOTH prompts (the chat triage + the voice agent).
+1. **ZERNIO_API_KEY** + **RETELL_API_KEY** (Retell needs a card on file to provision a number).
+2. **profileId + accountId** of the WhatsApp account (`GET /v1/profiles`, `GET /v1/accounts`).
+3. A **calling-eligible WhatsApp number** — see the gates below. This is the long pole.
+4. The **business details** in plain words — for BOTH prompts (text + voice), same persona.
+
+## The three gates (check BEFORE building — each returns a specific 4xx)
+1. **Retell card on file** — `create-phone-number` returns 402 without payment.
+2. **Zernio usage-based plan** — calling is metered; flat plans return 422
+   *"available on usage-based billing only"*. Only the account **owner** can switch plans.
+3. **Meta messaging tier** — a fresh number (TIER_250) cannot call; enabling returns 422
+   *"requires a daily messaging limit of at least 2,000"*. The tier is EARNED: message ~2× your
+   current limit in unique opted-in recipients over 7 days with good quality (250→1K→10K...).
+   No API, payment, or support ticket bypasses this — use a warmed number or budget weeks.
 
 ## The recipe (Claude follows this)
 
-### 1. Write the two prompts
-- **Text triage** — the Zernio `ai` node's systemPrompt (in the workflow template). Greets, answers,
-  and offers the call. Fill the `[BRACKETS]`.
-- **Voice agent** — the Retell agent's prompt. Start from `templates/retell-voice-agent.base.md`
-  (read `templates/retell-voice-agent.example.md` for a filled one). Voice rules matter: no markdown,
-  one question per turn, confirm names/numbers/times, end the call cleanly.
+### 1. Build the voice agent (Retell)
+Prompt from `templates/retell-voice-agent.base.md` (voice discipline: short turns, one question,
+confirm names/numbers back, no lists/URLs read aloud). Create the LLM + agent:
+`POST /create-retell-llm` → `POST /create-agent` (`response_engine: {type: retell-llm, llm_id}`,
+`voice_id`). Test in the Retell playground before wiring anything.
 
-### 2. Stand up the Retell side (so `forwardTo` has a target)
-Recommended: **static SIP-bound agent** (Path 1 in `reference/retell-voice-api.md`) — import a number
-into Retell, bind your `agent_id`, and you get a fixed SIP address. Set the workflow's
-`start_call.forwardTo` to it (`sip:…@sip.retellai.com`, or your trunk URI; `wss://…` also supported per
-Zernio's WhatsApp Calling docs). Test the agent in Retell's playground first.
+### 2. Give the agent an inbound line (Retell)
+`POST /create-phone-number` with **`inbound_agents: [{agent_id, weight: 1}]`**
+(the old `inbound_agent_id` field is deprecated — returns 400). This number is the forward target.
 
-### 3. Build + create the Zernio workflow (one call, draft)
-Start from `templates/whatsapp-voice-agent.workflow.json` — the memory-enabled text loop **plus** the
-`start_call` escalation with `success` / `permission_required` / `failed` handled. Fill `<profileId>`,
-`<accountId>`, `<model>`, `<RETELL_FORWARD_URI>`, and the systemPrompt `[BRACKETS]`; strip `_` keys.
+### 3. Enable calling on the WhatsApp number (Zernio — THE bridge)
 ```bash
-curl -s -X POST "https://zernio.com/api/v1/workflows" \
+curl -s -X POST "https://zernio.com/api/v1/whatsapp/phone-numbers/{phoneNumberDocId}/calling" \
   -H "Authorization: Bearer $ZERNIO_API_KEY" -H "Content-Type: application/json" \
-  -d @workflow.json
+  -d '{"accountId":"<accountId>","forwardTo":"sip:+1<retellNumber>@sip.retellai.com;transport=tcp","recordingEnabled":false}'
 ```
-Returns the workflow **id** in `draft`.
+Verify with `GET /v1/whatsapp/calling?accountId=<accountId>` → expect `callingEnabled: true` and a
+**`callDeepLink`** (`https://wa.me/call/<number>`) — save that link for step 4.
+Full endpoint set + field semantics: `reference/whatsapp-calling-api.md`.
 
-### 4. Activate
-```bash
-curl -s -X POST "https://zernio.com/api/v1/workflows/<id>/activate" -H "Authorization: Bearer $ZERNIO_API_KEY"
-```
-Pause anytime: `POST /v1/workflows/<id>/pause`. Edit only while `draft`/`paused`: pause → `PATCH` → activate.
+### 4. Build the text agent (Zernio workflow)
+Start from **`templates/whatsapp-ai-front-desk.workflow.json`** — the live-tested graph: memory
+loop + human-escape + call-intent detection → sends the `callDeepLink`. Fill the `[BRACKETS]`,
+paste the deep link, `POST /v1/workflows`, confirm with the user, `/activate`.
 
-### 5. Test the whole bridge end to end
-On the live WhatsApp number: send a message → confirm the text agent replies with memory → reply `CALL`
-→ confirm the phone rings, the Retell agent answers, and the conversation flows → hang up → confirm the
-`success` post-call text. Then test the failure paths (deny permission → `permission_required`; bad
-`forwardTo` → `failed` fallback). Inspect runs: `GET /v1/workflows/<id>/executions`.
+### 5. Test end to end (in this order)
+Text → short reply with memory → "can we talk on a call?" → deep link arrives → tap → **the voice
+agent answers** → give a name + number → it confirms them back → hang up → chat continues →
+"let me talk to a REAL person" → handoff fires. Inspect runs: `GET /v1/workflows/{id}/executions`.
 
-## Gaps to design around (learned the hard way)
-- **`start_call` is WhatsApp-only** and needs a **KYC'd calling number** — this is the long pole. Start KYC early.
-- **The contact-number variable** in `start_call.to` — `{{contactPhone}}` is a placeholder. **Verify the
-  exact run variable Zernio exposes** for the contact's number against a live execution before trusting it.
-- **Always wire the `failed` edge** — a dropped call with no fallback strands the contact. The template
-  falls back to text.
-- **`permission_required`** — WhatsApp gates calls on contact opt-in (`requirePermissionFirst: true`).
-  Handle the edge (ask them to allow calls, loop back) or the escalation silently dies.
-- **Recording is off by default** — only `recordingEnabled: true` **with consent + disclosure** (and per
-  local two-party-consent law).
-- **Two bills, two brains** — Retell bills voice minutes/usage directly to your Retell account, separate
-  from Zernio's carrier charges. And the voice prompt ≠ the text prompt; keep their tone consistent.
-- **Retell ships fast / Zernio API evolves** — verify SIP endpoint shapes + the WhatsApp calling fields
-  against live docs before a production deploy. Both reference files flag the spots to check.
-- **Memory** — the text `ai` node has no built-in history; the `remember` set_variable accumulator is what
-  gives multi-turn chat memory (same trick as `zernio-workflow-creator`). The Retell agent keeps its own
-  per-call context.
+## Gaps to design around (all live-verified)
+- **Condition regex needs `operator: "matches"`** — with `contains` the regex is treated as a
+  literal substring and the rule silently NEVER fires (everything falls to the AI). This bug ships
+  easily and looks like "the AI just talks a lot."
+- **One persona across text + voice** — same name, same warmth in both prompts, or the chat→call
+  hop feels like a transfer. The voice agent must NOT pretend to remember chat specifics (the two
+  brains share no history) — instruct it to "continue helping naturally."
+- **Keep text replies SHORT** — hard-rule the style block (max 1–2 sentences, one question). Long
+  AI replies read as spam on WhatsApp and hurt the quality rating your tier depends on.
+- **Memory accumulator** on the text AI node (`set_variable` history trick) — without it the agent
+  re-greets every message. Unbounded growth caveat applies (see zernio-workflow-creator).
+- **`outboundDisabled` is separate from inbound** — inbound calling live ≠ `start_call` works.
+  Wire outbound only after checking the flag.
+- **Recording off by default** — enable only with consent + disclosure (two-party-consent laws).
+- **Two bills** — Zernio meters the WhatsApp/carrier side; Retell bills voice minutes + the
+  number's monthly fee. Cents per call, but know it.
+- **Both APIs move fast** — re-verify against live docs before a production deploy.
 
 ## Guardrails
-- **Confirm before create + before activate + before the first real call.** Show the graph, both prompts,
-  and the `forwardTo` target. Get a yes.
-- **Never print the API key.** It lives in env / the user's secret store.
-- **Edit only while paused/draft.**
-- **Voice = the brand on the phone.** The Retell prompt should sound like a warm human, one ask at a time —
-  not a robotic IVR.
+- **Confirm before create/activate/enable-calling.** Show both prompts, the graph, the forwardTo.
+- **Never print API keys.**
+- **Workflow edits only while paused/draft** — pause → PATCH → activate.
+- **The voice IS the brand on the phone** — pick it deliberately, test by talking, not reading.
 
 ## Reference
-- `reference/whatsapp-calling-api.md` — Zernio WhatsApp Calling + the `start_call` node (forwardTo, edges, prereqs).
-- `reference/retell-voice-api.md` — Retell connection (SIP-bound agent, Register API, WebSocket) + gotchas.
-- `templates/whatsapp-voice-agent.workflow.json` — the full Zernio workflow (text qualify → start_call → Retell).
-- `templates/retell-voice-agent.base.md` — fill-in-the-blank Retell voice-agent prompt.
-- `templates/retell-voice-agent.example.md` — a fully-filled voice prompt (appointment booking).
-- Pairs with `zernio-workflow-creator` (the text-only agent + full 16-node Workflow API contract).
+- `reference/whatsapp-calling-api.md` — Zernio WhatsApp Calling: all four calling endpoints,
+  `forwardTo` forms, gates, deep link, `start_call` node spec.
+- `reference/retell-voice-api.md` — Retell wiring: agent/LLM creation, `inbound_agents`, SIP forms.
+- `templates/whatsapp-ai-front-desk.workflow.json` — **the proven inbound graph** (text + tap-to-call).
+- `templates/whatsapp-voice-agent.workflow.json` — the outbound `start_call` variant (for when
+  Meta grants outbound).
+- `templates/retell-voice-agent.base.md` / `.example.md` — the voice prompt (blank + filled).
+- Pairs with `zernio-workflow-creator` (full 16-node Workflow API contract) and
+  `zernio-comment-to-dm` (comment → DM → this front desk).
