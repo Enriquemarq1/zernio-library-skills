@@ -57,8 +57,17 @@ Path 1 — use it if you're already running a media server or want provider-agno
 ---
 
 ## Recommended for the template
-**Path 1** (static SIP-bound agent). It maps cleanly to a fixed `start_call.forwardTo`, needs
-no per-call bridge, and is the production pattern carriers document.
+**Simplest proven path: a Retell-PURCHASED number + `forwardTo: tel:+1<number>`.** A purchased
+number (`POST /create-phone-number` with `inbound_agents`) is a real managed phone line — any
+platform can forward to it by plain call, zero trunk config. Live-verified.
+
+**Path 1 (SIP-bound / elastic trunking) is the optimization** — it maps to a fixed SIP
+`forwardTo` and skips the PSTN leg, but the IP-allowlist requirement (Retell ranges
+18.98.16.120/30, 143.223.88.0/21, 161.115.160.0/19; `transport=tcp`, TLS:5061) applies to the
+**SIP-sending side's infrastructure** — when a platform (e.g. Zernio) places the forward call,
+that's THEIR infra, not yours, so you can't complete this setup yourself. Use it only when you
+control the SIP sender or the platform documents Retell SIP interop — and always prove it with a
+live test call before shipping.
 
 ## Gotchas
 - **No static IP on Retell's SIP server** → use credential auth, not IP allowlists.

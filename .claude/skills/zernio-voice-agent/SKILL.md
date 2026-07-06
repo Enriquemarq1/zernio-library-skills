@@ -74,8 +74,15 @@ confirm names/numbers back, no lists/URLs read aloud). Create the LLM + agent:
 ```bash
 curl -s -X POST "https://zernio.com/api/v1/whatsapp/phone-numbers/{phoneNumberDocId}/calling" \
   -H "Authorization: Bearer $ZERNIO_API_KEY" -H "Content-Type: application/json" \
-  -d '{"accountId":"<accountId>","forwardTo":"sip:+1<retellNumber>@sip.retellai.com;transport=tcp","recordingEnabled":false}'
+  -d '{"accountId":"<accountId>","forwardTo":"tel:+1<retellNumber>","recordingEnabled":false}'
 ```
+**Use `tel:` for a Retell-PURCHASED number — it's the proven path.** The purchased number is a
+real, managed phone number; forwarding by plain call needs zero extra setup. The
+`sip:+1<num>@sip.retellai.com;transport=tcp` form is the advanced option: it skips the PSTN leg
+(slightly cheaper/faster) but Retell's direct-SIP ingress is designed for its **elastic SIP
+trunking** (imported numbers, IP-allowlist on the SIP-sender's side — which is the platform's
+infra, not yours). Verify a sip: forward with a live test call before trusting it; if the call
+doesn't land, fall back to `tel:`.
 Verify with `GET /v1/whatsapp/calling?accountId=<accountId>` → expect `callingEnabled: true` and a
 **`callDeepLink`** (`https://wa.me/call/<number>`) — save that link for step 4.
 Full endpoint set + field semantics: `reference/whatsapp-calling-api.md`.
