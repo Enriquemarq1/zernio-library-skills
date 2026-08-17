@@ -1,5 +1,10 @@
 # Zernio Library Skills
 
+<p align="center">
+  <img src=".github/banner.gif" alt="Zernio Library Skills — Claude Code skills for the social media API. One video in, native TikTok + Reels + Shorts out. Built by @Enriquemarq1." width="100%"/>
+</p>
+
+
 A library of Claude Code skills for [Zernio](https://zernio.com). It ships:
 - **`clip-machine`** — one long video in, native TikTok + Reels + Shorts posts out. The
   four stations: CUT (word-level transcript → best-moments framework → 9:16 reframe),
