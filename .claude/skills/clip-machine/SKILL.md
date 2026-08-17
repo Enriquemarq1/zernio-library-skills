@@ -15,6 +15,9 @@ LONG VIDEO → [1 CUT] → [2 CAPTION] → [3 COVER] → [4 POST] → native pos
 The math this kills: 1 video → 3 clips × 3 platforms = 9 manual uploads,
 every week, forever. With the machine it's 3 requests.
 
+**Starting from zero?** Copy-paste `reference/initiation-prompt.md` to Claude
+Code in an empty folder — it sets up the whole system for you.
+
 ## STATION 1 — CUT
 
 1. **Transcribe with word timestamps.** AssemblyAI is the reference model
