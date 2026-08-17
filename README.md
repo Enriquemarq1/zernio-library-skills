@@ -1,6 +1,12 @@
 # Zernio Library Skills
 
 A library of Claude Code skills for [Zernio](https://zernio.com). It ships:
+- **`clip-machine`** — one long video in, native TikTok + Reels + Shorts posts out. The
+  four stations: CUT (word-level transcript → best-moments framework → 9:16 reframe),
+  CAPTION (burned word captions + per-platform caption text), COVER (per-platform cover
+  rules), POST (one Zernio request per clip). Includes the copy-paste best-moments
+  selection prompt and the per-platform spec cheat-sheet (TikTok / Reels / Shorts:
+  dimensions, lengths, captions, covers, native rules).
 - **`zernio-publish`** — end-to-end social publishing across 13 platforms.
 - **`zernio-comment-to-dm`** — build Instagram/Facebook comment-to-DM automations + DM
   sequences on command. Tell Claude a post, a keyword, and the message — it creates the
