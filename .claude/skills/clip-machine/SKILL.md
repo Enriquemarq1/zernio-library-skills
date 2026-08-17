@@ -20,10 +20,14 @@ Code in an empty folder — it sets up the whole system for you.
 
 ## STATION 1 — CUT
 
-1. **Transcribe with word timestamps.** AssemblyAI is the reference model
-   (`speech_models: ["universal-3-5-pro", "universal-2"]` — the `speech_model`
-   singular param is deprecated and returns 400). Every word gets a
-   millisecond start/end. No ground truth, no clean cut.
+1. **Transcribe with word timestamps.** WhisperX is the reference model —
+   open source, free, runs on your machine (`pip install whisperx`, needs
+   ffmpeg):
+   `whisperx video.mp4 --model large-v3 --output_format json`
+   The JSON gives every word a start/end timestamp via forced alignment
+   (GPU: add `--device cuda`; CPU works with `--compute_type int8`). Any
+   word-level transcription service works too — the machine only needs
+   words with millisecond timing. No ground truth, no clean cut.
 2. **Pick the best moments** with the selection framework in
    `reference/best-moments-prompt.md`. That file IS the prompt — paste it
    with the transcript. Core law: **finish the point** — a clip starts at the

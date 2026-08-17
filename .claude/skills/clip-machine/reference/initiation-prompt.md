@@ -26,7 +26,8 @@ prompt and the platform cheat-sheet. That's the framework you'll work with.
 STEP 3 — Get ready to run.
 Set up the .env for my Zernio API key (zernio.com — free to start) and tell me
 exactly where to paste it. Check the tools you need for transcription and video
-work (ffmpeg, AssemblyAI) and flag anything missing before we start.
+work (ffmpeg + WhisperX — both free and open source) and flag anything
+missing before we start.
 
 When setup is done, give me a short summary of what you built and ask me for the
 long-form video. That's next: you'll pick the best moments with the framework, cut
