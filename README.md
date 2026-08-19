@@ -14,6 +14,18 @@ A library of Claude Code skills for [Zernio](https://zernio.com). It ships:
   dimensions, lengths, captions, covers, native rules). New here? Copy-paste the
   [initiation prompt](.claude/skills/clip-machine/reference/initiation-prompt.md)
   to Claude Code in an empty folder and the whole system sets itself up.
+- **`white-label-blueprint`** — build your own white-label social media tool: YOUR brand,
+  your clients' accounts, one API underneath. The five checks: embedded OAuth under your
+  brand (headless connect — the client never sees the vendor), one isolated workspace per
+  client (profiles, 403-enforced), full-capability posting on their behalf, webhooks for
+  token health ("reconnect needed" before the client notices), and the maintenance you
+  never build. Deliberately thin: no database (the API is the record), one ~200-line
+  server, two pages. Ships the stage prompts (paste one per check, each a visible win),
+  depth stages (unified inbox, per-client analytics + printable report, the posting
+  queue) and [THE WHITE-LABEL CHECKLIST](.claude/skills/white-label-blueprint/reference/white-label-checklist.md)
+  one-pager. New here? Copy-paste the
+  [initiation prompt](.claude/skills/white-label-blueprint/reference/initiation-prompt.md)
+  to Claude Code in an empty folder.
 - **`zernio-publish`** — end-to-end social publishing across 13 platforms.
 - **`zernio-comment-to-dm`** — build Instagram/Facebook comment-to-DM automations + DM
   sequences on command. Tell Claude a post, a keyword, and the message — it creates the
