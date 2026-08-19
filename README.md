@@ -22,8 +22,11 @@ A library of Claude Code skills for [Zernio](https://zernio.com). It ships:
   never build. Deliberately thin: no database (the API is the record), one ~200-line
   server, two pages. Ships the stage prompts (paste one per check, each a visible win),
   depth stages (unified inbox, per-client analytics + printable report, the posting
-  queue) and [THE WHITE-LABEL CHECKLIST](.claude/skills/white-label-blueprint/reference/white-label-checklist.md)
-  one-pager. New here? Copy-paste the
+  queue), [THE WHITE-LABEL CHECKLIST](.claude/skills/white-label-blueprint/reference/white-label-checklist.md)
+  one-pager, and [THE POLISH LOOP](.claude/skills/white-label-blueprint/reference/ui-polish-loop.md) —
+  a scored screenshot→score→fix loop (10-category SaaS standard, exit only on two
+  consecutive 9+ passes) that takes the dashboard from working to product-grade.
+  New here? Copy-paste the
   [initiation prompt](.claude/skills/white-label-blueprint/reference/initiation-prompt.md)
   to Claude Code in an empty folder.
 - **`zernio-publish`** — end-to-end social publishing across 13 platforms.

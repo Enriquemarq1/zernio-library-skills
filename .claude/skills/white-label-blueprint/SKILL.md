@@ -78,5 +78,13 @@ X (Twitter) requires a payment method (API pass-through costs) · request
 rate scales with your connected-account count · past 2,000 accounts it's an
 enterprise conversation · docs: https://docs.zernio.com
 
+## Make it look like a product — THE POLISH LOOP
+
+A working portal isn't a product until the UI holds a SaaS bar. Paste
+`reference/ui-polish-loop.md` and Claude Code runs a scored loop — screenshot
+→ score 10 categories against the standard → fix → repeat — until the
+dashboard passes 9+ across the board on two consecutive passes. It saves every
+pass's screenshots, so you get the before/after for free.
+
 Read `reference/white-label-checklist.md` for the checklist as a shareable
 one-pager.
