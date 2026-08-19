@@ -97,17 +97,36 @@ No new features. Give me a tour of the codebase:
 3. Print the final file tree.
 ```
 
-## STAGE 6 · Deploy
+## STAGE 6 · INSTALL YOUR SERVER — then deploy (we use Railway)
+
+Your portal needs a home with a public URL (webhooks demand it). Any host
+works — in this case we're using Railway. One terminal command gives Claude
+Code native hands on it via Railway's official MCP:
+
+```bash
+claude mcp add railway --transport http https://mcp.railway.com
+```
+
+First use opens Railway's OAuth — approve it and Claude Code can create
+projects, deploy, set variables and read logs on its own. No tokens to paste
+anywhere. (No MCP? The CLI path works too: `npm i -g @railway/cli` +
+`railway login`.)
+
+Then paste:
 
 ```
-Deploy this portal to my host (Railway/Render/Fly — I'll say which):
+Deploy this portal to Railway using the Railway MCP:
 
-1. Add a start script and PORT handling. .env stays out of git — set
-   ZERNIO_API_KEY, BASE_URL (the public URL) and WEBHOOK_SECRET as host
-   variables.
-2. Deploy, then update the Zernio webhook registration to the public URL.
-3. Smoke-test live: open the client connect page on the public URL, run one
+1. Create a new Railway project for it. Add a start script and PORT handling
+   so it runs there.
+2. Set ZERNIO_API_KEY, BASE_URL (the public URL once known) and
+   WEBHOOK_SECRET as Railway variables — .env never goes to git.
+3. Deploy, watch the logs until it's healthy, then update the Zernio webhook
+   registration to the public URL.
+4. Smoke-test live: open the client connect page on the public URL, run one
    connect, confirm the webhook lands.
+
+Hand me the public URL.
 ```
 
 ---
