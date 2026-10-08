@@ -1,0 +1,4 @@
+interface:
+  display_name: "Zernio Messaging & Inbox Integration"
+  short_description: "Standalone Zernio messaging integration for your app"
+  default_prompt: "Use $zernio-inbox-integration to add Zernio messaging to my existing app through Map, Connect, Integrate and Verify."

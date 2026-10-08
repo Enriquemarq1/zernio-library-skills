@@ -29,6 +29,19 @@ A library of Claude Code skills for [Zernio](https://zernio.com). It ships:
   New here? Copy-paste the
   [initiation prompt](.claude/skills/white-label-blueprint/reference/initiation-prompt.md)
   to Claude Code in an empty folder.
+- **`zernio-inbox-integration`** — add Zernio's messaging and unified inbox to an app you
+  ALREADY have: **Map → Connect → Integrate → Verify**. Standalone (no white-label blueprint
+  required): it reads your repository first and keeps your framework, auth, data model and
+  design, then guides the channel connections, one conversation list across the channels you
+  select (SMS, WhatsApp, Instagram, Messenger and more), message history, replies and message
+  events. It gets one complete exchange working before it expands to more channels, and it
+  labels fixtures as fixtures (a mock UI is never reported as a verified integration). Ships the
+  [agent brief + four paste-ready prompts](.claude/skills/zernio-inbox-integration/references/agent-brief.md),
+  the [API contracts and integration pitfalls](.claude/skills/zernio-inbox-integration/references/api-contracts.md)
+  audited against the official docs, and a
+  [Claude Code testing handoff](.claude/skills/zernio-inbox-integration/references/claude-code-handoff.md).
+  Building a branded app from zero instead? Use `white-label-blueprint`; this skill takes its
+  inbox stage in depth.
 - **`zernio-publish`** — end-to-end social publishing across 13 platforms.
 - **`zernio-comment-to-dm`** — build Instagram/Facebook comment-to-DM automations + DM
   sequences on command. Tell Claude a post, a keyword, and the message — it creates the
@@ -156,6 +169,12 @@ zernio-library-skills/
 │       │       ├── whatsapp-voice-agent.workflow.json    outbound start_call variant
 │       │       ├── retell-voice-agent.base.md            fill-in-the-blank voice prompt
 │       │       └── retell-voice-agent.example.md         a filled voice prompt (booking)
+│       ├── zernio-inbox-integration/          ← messaging + unified inbox in YOUR existing app
+│       │   ├── SKILL.md                          Map → Connect → Integrate → Verify
+│       │   ├── references/agent-brief.md         the agent brief + four paste-ready prompts
+│       │   ├── references/api-contracts.md       API contracts + pitfalls, audited vs the docs
+│       │   ├── references/claude-code-handoff.md the end-to-end testing handoff
+│       │   └── references/library-relationship.md how it relates to white-label-blueprint
 │       └── skill-creator/                     ← Anthropic's official skill-creator
 │                                                  bundled for when you add more skills
 ├── .env                                       ← ZERNIO_API_KEY (placeholder until you fill it)
