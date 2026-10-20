@@ -29,6 +29,15 @@ A library of Claude Code skills for [Zernio](https://zernio.com). It ships:
   New here? Copy-paste the
   [initiation prompt](.claude/skills/white-label-blueprint/reference/initiation-prompt.md)
   to Claude Code in an empty folder.
+- **`white-label-client-report`** — Part 2 of the white-label build: a client report with
+  only YOUR logo on it, inside your own app. Organic and paid side by side (the one-call
+  analytics dashboard next to the ads, same client, same dates), how fast the brand answers
+  its messages (inbox response time and volume), and what people feel in the comments
+  (sentiment you score yourself), with a branded client link and a PDF. A "Show spend"
+  switch keeps the budget out of shared links. Ships
+  [six paste-ready stage prompts](.claude/skills/white-label-client-report/reference/stage-prompts.md)
+  that start by reading YOUR app; built on top of the `white-label-blueprint` app, works on
+  any app with one Zernio profile per client.
 - **`zernio-inbox-integration`** — add Zernio's messaging and unified inbox to an app you
   ALREADY have: **Map → Connect → Integrate → Verify**. Standalone (no white-label blueprint
   required): it reads your repository first and keeps your framework, auth, data model and
@@ -169,6 +178,9 @@ zernio-library-skills/
 │       │       ├── whatsapp-voice-agent.workflow.json    outbound start_call variant
 │       │       ├── retell-voice-agent.base.md            fill-in-the-blank voice prompt
 │       │       └── retell-voice-agent.example.md         a filled voice prompt (booking)
+│       ├── white-label-client-report/         ← Part 2: the branded client report
+│       │   ├── SKILL.md                          the five checks + endpoints + honest limits
+│       │   └── reference/stage-prompts.md        six paste-ready prompts (organic, paid, community, sentiment, link + PDF)
 │       ├── zernio-inbox-integration/          ← messaging + unified inbox in YOUR existing app
 │       │   ├── SKILL.md                          Map → Connect → Integrate → Verify
 │       │   ├── references/agent-brief.md         the agent brief + four paste-ready prompts
