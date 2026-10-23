@@ -35,8 +35,10 @@ A library of Claude Code skills for [Zernio](https://zernio.com). It ships:
   its messages (inbox response time and volume), and what people feel in the comments
   (sentiment you score yourself), with a branded client link and a PDF. A "Show spend"
   switch keeps the budget out of shared links. Ships
-  [six paste-ready stage prompts](.claude/skills/white-label-client-report/reference/stage-prompts.md)
-  that start by reading YOUR app; built on top of the `white-label-blueprint` app, works on
+  [eight paste-ready stage prompts](.claude/skills/white-label-client-report/reference/stage-prompts.md)
+  that start by reading YOUR app, and [the design system](.claude/skills/white-label-client-report/reference/design-system.md)
+  that makes it look like a real product (Zernio-dashboard calm: one accent, ranked rows with a BEST winner,
+  tables with coloured metric icons, ER pills, your logo or your face as the agency mark); built on top of the `white-label-blueprint` app, works on
   any app with one Zernio profile per client.
 - **`zernio-inbox-integration`** — add Zernio's messaging and unified inbox to an app you
   ALREADY have: **Map → Connect → Integrate → Verify**. Standalone (no white-label blueprint
@@ -180,7 +182,8 @@ zernio-library-skills/
 │       │       └── retell-voice-agent.example.md         a filled voice prompt (booking)
 │       ├── white-label-client-report/         ← Part 2: the branded client report
 │       │   ├── SKILL.md                          the five checks + endpoints + honest limits
-│       │   └── reference/stage-prompts.md        six paste-ready prompts (organic, paid, community, sentiment, link + PDF)
+│       │   ├── reference/stage-prompts.md        eight paste-ready prompts (organic, paid, community, sentiment, link + PDF, the look, polish)
+│       │   └── reference/design-system.md        the look: tokens, five patterns, where it applies
 │       ├── zernio-inbox-integration/          ← messaging + unified inbox in YOUR existing app
 │       │   ├── SKILL.md                          Map → Connect → Integrate → Verify
 │       │   ├── references/agent-brief.md         the agent brief + four paste-ready prompts

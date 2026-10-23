@@ -24,7 +24,7 @@ YOUR APP → [1 YOUR LOGO] → [2 ORGANIC] → [3 PAID] → [4 RESPONSE TIME] �
 | 4 | How fast the brand answers | `GET /v1/analytics/inbox/response-time` and `/volume`: median first reply, the spread, messages received |
 | 5 | What people feel | Comments from `GET /v1/inbox/comments`, scored by your own code. Zernio gives you the raw comments; the analysis is yours to add |
 
-**Starting from the blueprint app?** Paste `reference/stage-prompts.md` one stage at a time into Claude Code inside that app. **Starting from your own app?** Stage 0 reads your code first and keeps your framework, design and data model.
+**Starting from the blueprint app?** Paste `reference/stage-prompts.md` one stage at a time (seven stages: the tab, organic, paid, community, sentiment, the client link and PDF, then the look) into Claude Code inside that app. **Starting from your own app?** Stage 0 reads your code first and keeps your framework, design and data model.
 
 ## The architecture (still thin)
 
@@ -51,7 +51,19 @@ All on `https://zernio.com/api/v1`, bearer key server-side only. Checked against
 - Sentiment is your code's estimate, not Zernio's. A word-list scorer is free and runs offline; swap in a language model when you need nuance. Show who said what nowhere: counts and themes are enough for a report.
 - Pricing (zernio.com/pricing, October 19, 2026): two accounts free, then $6, $3 and $1 per connected account per month, every feature included. An ad account counts as an account.
 
+## The look
+
+A report only sells the agency if it looks like a product. `reference/design-system.md` is the design system the video's app uses: the calm language of Zernio's own dashboard. It has the tokens (white cards, cream sidebar, warm 1px borders, charcoal text, one accent, Geist), and five patterns:
+- the sidebar and switcher, with your logo or your face as the agency mark;
+- cards;
+- ranked rows with a BEST winner;
+- tables with coloured metric icons and real platform logos;
+- engagement-rate pills and deltas.
+
+Stage 6 applies it to the whole app with your own accent colour and mark.
+
 ## Files
 
 - `reference/stage-prompts.md`: one prompt per stage, paste-ready.
+- `reference/design-system.md`: the look (tokens, five patterns, where it applies, how to check it).
 - The polish loop from white-label-blueprint (`../white-label-blueprint/reference/ui-polish-loop.md`) finishes the look.

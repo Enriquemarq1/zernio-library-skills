@@ -37,10 +37,19 @@ Show:
    views + impressions, engagement rate, followers gained, current followers.
 2. Followers by account, one row per platform with its real logo.
 3. A daily line for views and engagement (inline SVG, no chart library).
-4. "Top posts published in this period": the top 3 with platform, date and
-   their main number. Label them as lifetime metrics; they won't add up to
-   the totals.
-5. A small "Data as of" line from dataAsOf.
+4. A "Platform breakdown" table, one row per platform: posts, likes,
+   comments, shares, saves, clicks, views, impressions, reach and engagement
+   rate, from GET /v1/analytics/daily-metrics?profileId={id}&fromDate={from}
+   &toDate={to} (its platformBreakdown; pass the dates, not days=).
+5. A "Top performing posts" table: the top 5 posts of the period from
+   GET /v1/analytics?profileId={id}&fromDate={from}&toDate={to}, with the
+   post's text on one line, its date, platform and the same metrics. Label
+   them as lifetime metrics; they won't add up to the totals.
+6. A "Content format breakdown": group those posts by their mediaType
+   (text, image, video, carousel), show each format's average engagement
+   rate, its post count and how far it is above or below the average, and
+   mark the best one.
+7. A small "Data as of" line from dataAsOf.
 
 Some platforms report views, others impressions, TikTok has no reach: show
 what exists, never fill gaps with zeros that look like results.
@@ -142,10 +151,24 @@ Open the client link in a private window and show me there is no vendor
 name on the page or in the PDF.
 ```
 
-## STAGE 6 · Polish
+## STAGE 6 · The look
+
+```
+Apply the design system in reference/design-system.md to the WHOLE app:
+the agency shell and sidebar, every workspace tab, the Report tab, the
+client's report link, the connect page and the PDF. Use its tokens, its
+five patterns (sidebar and switcher, cards, ranked rows, tables with the
+coloured metric icons, pills and deltas) and its font. Swap the accent for
+my brand colour [YOUR HEX] and use my logo (or my photo, in a circle) as the
+agency mark everywhere the agency appears, including the favicon. Keep every
+route and behaviour, and keep the client pages free of any vendor name.
+Screenshot every page at 1440 wide when you're done and show me.
+```
+
+## STAGE 7 · Polish
 
 ```
 Run the polish loop in ../white-label-blueprint/reference/ui-polish-loop.md
-on the Report tab and the client link only, until two consecutive clean
-passes. Keep the app's existing design language.
+on the Report tab and the client link, until two consecutive clean passes.
+Keep the design system from Stage 6.
 ```
