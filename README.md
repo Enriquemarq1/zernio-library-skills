@@ -1,11 +1,26 @@
 # Zernio Library Skills
 
 <p align="center">
-  <img src=".github/banner.gif" alt="Zernio Library Skills — Claude Code skills for the social media API. Built by @Enriquemarq1." width="100%"/>
+  <img src=".github/banner.gif" alt="Zernio Library Skills — Claude Code skills and a working app on Zernio, marketing infrastructure for products and agents. Built by @Enriquemarq1." width="100%"/>
 </p>
 
 **Claude Code skills and a working app for building social media products on [Zernio](https://zernio.com)'s one API.**
 Post everywhere, run the inbox, launch ads, answer WhatsApp with AI, or build your own white-label tool for your clients.
+
+## About Zernio
+
+[Zernio](https://zernio.com) is marketing infrastructure for products and agents. One API replaces months of separate integrations, built on official platform APIs, and Zernio handles authentication, rate limits and platform changes. Connect once and get:
+
+- **Social:** publish, schedule and analyze posts on 15+ platforms
+- **Inbox:** comments, DMs and replies in one place
+- **Ads:** campaigns on 7 ad platforms, from Meta to OpenAI Ads
+- **Messaging:** SMS, MMS, RCS, iMessage and WhatsApp
+- **Calls:** inbound, outbound and AI voice agents
+- **Phone numbers** in 57 countries
+
+The Zernio MCP server gives AI agents like Claude, Cursor and Codex the same access: they can connect accounts, run campaigns, send messages and place calls on their own.
+
+[Start for free](https://zernio.com) · [Docs](https://docs.zernio.com)
 
 ## Start here
 
