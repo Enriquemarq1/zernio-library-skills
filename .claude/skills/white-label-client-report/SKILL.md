@@ -24,6 +24,8 @@ YOUR APP → [1 YOUR LOGO] → [2 ORGANIC] → [3 PAID] → [4 RESPONSE TIME] �
 | 4 | How fast the brand answers | `GET /v1/analytics/inbox/response-time` and `/volume`: median first reply, the spread, messages received |
 | 5 | What people feel | Comments from `GET /v1/inbox/comments`, scored by your own code. Zernio gives you the raw comments; the analysis is yours to add |
 
+**Fastest path: clone the app, or paste the stages into your own.** The finished app from the video, with this report built in, is in this repo at [`apps/white-label-app/`](../../../apps/white-label-app/): `npm ci`, `npm run demo` to see it on made-up data, then your key and `clients.json` (its README has the setup). Clone it, or read it beside the stages below while you build your own.
+
 **Starting from the blueprint app?** Paste `reference/stage-prompts.md` one stage at a time (seven stages: the tab, organic, paid, community, sentiment, the client link and PDF, then the look) into Claude Code inside that app. **Starting from your own app?** Stage 0 reads your code first and keeps your framework, design and data model.
 
 ## The architecture (still thin)
@@ -64,6 +66,7 @@ Stage 6 applies it to the whole app with your own accent colour and mark.
 
 ## Files
 
+- [`apps/white-label-app/`](../../../apps/white-label-app/): the finished app with this report, ready to clone (`report/` holds the report code).
 - `reference/stage-prompts.md`: one prompt per stage, paste-ready.
 - `reference/design-system.md`: the look (tokens, five patterns, where it applies, how to check it).
 - The polish loop from white-label-blueprint (`../white-label-blueprint/reference/ui-polish-loop.md`) finishes the look.

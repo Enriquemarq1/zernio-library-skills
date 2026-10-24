@@ -1,221 +1,107 @@
 # Zernio Library Skills
 
 <p align="center">
-  <img src=".github/banner.gif" alt="Zernio Library Skills — Claude Code skills for the social media API. One video in, native TikTok + Reels + Shorts out. Built by @Enriquemarq1." width="100%"/>
+  <img src=".github/banner.gif" alt="Zernio Library Skills — Claude Code skills for the social media API. Built by @Enriquemarq1." width="100%"/>
 </p>
 
+**Claude Code skills and a working app for building social media products on [Zernio](https://zernio.com)'s one API.**
+Post everywhere, run the inbox, launch ads, answer WhatsApp with AI, or build your own white-label tool for your clients.
 
-A library of Claude Code skills for [Zernio](https://zernio.com). It ships:
-- **`clip-machine`** — one long video in, native TikTok + Reels + Shorts posts out. The
-  four stations: CUT (word-level transcript → best-moments framework → 9:16 reframe),
-  CAPTION (burned word captions + per-platform caption text), COVER (per-platform cover
-  rules), POST (one Zernio request per clip). Includes the copy-paste best-moments
-  selection prompt and the per-platform spec cheat-sheet (TikTok / Reels / Shorts:
-  dimensions, lengths, captions, covers, native rules). New here? Copy-paste the
-  [initiation prompt](.claude/skills/clip-machine/reference/initiation-prompt.md)
-  to Claude Code in an empty folder and the whole system sets itself up.
-- **`white-label-blueprint`** — build your own white-label social media tool: YOUR brand,
-  your clients' accounts, one API underneath. The five checks: embedded OAuth under your
-  brand (headless connect — the client never sees the vendor), one isolated workspace per
-  client (profiles, 403-enforced), full-capability posting on their behalf, webhooks for
-  token health ("reconnect needed" before the client notices), and the maintenance you
-  never build. Deliberately thin: no database (the API is the record), one ~200-line
-  server, two pages. Ships the stage prompts (paste one per check, each a visible win),
-  depth stages (unified inbox, per-client analytics + printable report, the posting
-  queue), [THE WHITE-LABEL CHECKLIST](.claude/skills/white-label-blueprint/reference/white-label-checklist.md)
-  one-pager, and [THE POLISH LOOP](.claude/skills/white-label-blueprint/reference/ui-polish-loop.md) —
-  a scored screenshot→score→fix loop (10-category SaaS standard, exit only on two
-  consecutive 9+ passes) that takes the dashboard from working to product-grade.
-  New here? Copy-paste the
-  [initiation prompt](.claude/skills/white-label-blueprint/reference/initiation-prompt.md)
-  to Claude Code in an empty folder.
-- **`white-label-client-report`** — Part 2 of the white-label build: a client report with
-  only YOUR logo on it, inside your own app. Organic and paid side by side (the one-call
-  analytics dashboard next to the ads, same client, same dates), how fast the brand answers
-  its messages (inbox response time and volume), and what people feel in the comments
-  (sentiment you score yourself), with a branded client link and a PDF. A "Show spend"
-  switch keeps the budget out of shared links. Ships
-  [eight paste-ready stage prompts](.claude/skills/white-label-client-report/reference/stage-prompts.md)
-  that start by reading YOUR app, and [the design system](.claude/skills/white-label-client-report/reference/design-system.md)
-  that makes it look like a real product (Zernio-dashboard calm: one accent, ranked rows with a BEST winner,
-  tables with coloured metric icons, ER pills, your logo or your face as the agency mark); built on top of the `white-label-blueprint` app, works on
-  any app with one Zernio profile per client.
-- **`zernio-inbox-integration`** — add Zernio's messaging and unified inbox to an app you
-  ALREADY have: **Map → Connect → Integrate → Verify**. Standalone (no white-label blueprint
-  required): it reads your repository first and keeps your framework, auth, data model and
-  design, then guides the channel connections, one conversation list across the channels you
-  select (SMS, WhatsApp, Instagram, Messenger and more), message history, replies and message
-  events. It gets one complete exchange working before it expands to more channels, and it
-  labels fixtures as fixtures (a mock UI is never reported as a verified integration). Ships the
-  [agent brief + four paste-ready prompts](.claude/skills/zernio-inbox-integration/references/agent-brief.md),
-  the [API contracts and integration pitfalls](.claude/skills/zernio-inbox-integration/references/api-contracts.md)
-  audited against the official docs, and a
-  [Claude Code testing handoff](.claude/skills/zernio-inbox-integration/references/claude-code-handoff.md).
-  Building a branded app from zero instead? Use `white-label-blueprint`; this skill takes its
-  inbox stage in depth.
-- **`zernio-publish`** — end-to-end social publishing across 13 platforms.
-- **`zernio-comment-to-dm`** — build Instagram/Facebook comment-to-DM automations + DM
-  sequences on command. Tell Claude a post, a keyword, and the message — it creates the
-  Zernio automation and orchestrates the follow-up DMs, so you never click through a
-  dashboard or clone workflows. Reuse it for any new post/keyword in seconds.
-- **`meta-ads-launch`** — launch Meta (Facebook/Instagram) ad batches through Zernio's ads
-  API. You decide the offer, copy, audience, and budget; Claude launches ALL your creative
-  variations in one call (1 campaign + 1 ad set + N ads), then immediately pauses the
-  campaign so nothing spends until you review and go live. Ships with the complete verified
-  Zernio ads API reference (multi-creative shapes, idempotency, pause/resume, targeting,
-  lead forms, click-to-WhatsApp). Requires the Zernio Ads add-on (included on usage-based plans).
-- **`zernio-workflow-creator`** — build Zernio conversation Workflows, including a 24/7 WhatsApp
-  **customer-service agent**, on command. Tell Claude what the agent should do and it builds the
-  whole node graph (trigger → human-escape → AI node with memory → reply → wait → loop) via
-  Zernio's Workflow API, activates it, and edits it later when you ask — no dragging nodes one by
-  one. Pairs with `zernio-comment-to-dm` (comment → DM → this AI agent runs the conversation).
-  Ships the full Workflow API reference (all 16 node types) + a ready, fill-in-the-blank
-  customer-service agent template.
-- **`zernio-voice-agent`** — give ONE WhatsApp number a full **AI front desk**: text it and an AI
-  replies (memory-enabled Zernio workflow); **call it and an AI voice picks up** (Zernio WhatsApp
-  Calling routes inbound calls via `forwardTo` to a **Retell AI** voice agent). Live-proven
-  inbound-first: the text agent detects call intent and sends the number's tap-to-call deep link;
-  the tapped call lands on the voice agent. Ships the verified calling endpoints + gates (plan +
-  messaging-tier), the Retell wiring reference, the proven front-desk workflow template, an
-  outbound `start_call` variant, and fill-in-the-blank voice prompts. Pairs with
-  `zernio-workflow-creator`.
+## Start here
 
-More Zernio skills (analytics, calendaring, account management) will land over time.
+| You want to… | Go to |
+|---|---|
+| **Build your own white-label app**, step by step, with Claude Code | [`white-label-blueprint`](.claude/skills/white-label-blueprint/SKILL.md) (Part 1: your brand, client workspaces, posting), then [`white-label-client-report`](.claude/skills/white-label-client-report/SKILL.md) (Part 2: the branded client report) |
+| **Clone the finished app** and make it yours | [`apps/white-label-app/`](apps/white-label-app/) |
+| Use a single skill (publish, inbox, ads, automations) | [The skills](#the-skills) |
 
-You hand Claude an asset (video file, Drive link, image folder, URL) and tell it where to post. Claude analyzes it, drafts platform-tailored captions and titles and hashtags, converts formats if needed, uploads the media, shows you the full package for approval, schedules the post via the Zernio API, verifies it landed, and logs the result.
+## The app
 
-## Install
+[`apps/white-label-app/`](apps/white-label-app/) is the white-label portal built in the videos: your agency's name on every page, one isolated workspace per client, all on one Zernio key.
 
-Everything lives in one hidden folder: **`.claude/`** (note the dot — your file explorer may hide
-it). Claude Code automatically discovers any skill placed at `.claude/skills/<skill-name>/` in
-your project and loads it — that's the whole install mechanism.
+| Tab | What it does |
+|---|---|
+| **Connections** | Clients connect their accounts on a page with only your brand (headless OAuth), with account health |
+| **Content** | Post now or schedule across platforms; the queue with retry |
+| **Calendar** | The month of scheduled and published posts |
+| **Analytics** | Per-platform breakdown, latest posts, best time to post |
+| **Inbox** | One conversation list across channels, replies, webhooks |
+| **Report** | Organic and paid side by side, inbox response time, comment sentiment, a branded client link and a PDF, with a "Show spend" switch |
 
-**Option A — use this repo as your project (simplest):**
+![The client report, on demo data](apps/white-label-app/docs/screenshots/report.png)
+
+**Quickstart: see it in a minute, no Zernio account needed**
 
 ```bash
 git clone https://github.com/Enriquemarq1/zernio-library-skills.git
-cd zernio-library-skills
-claude
+cd zernio-library-skills/apps/white-label-app
+npm ci
+npm run demo      # three made-up clients on a local fake API → http://127.0.0.1:3000
+npm test          # 45 tests, never the real API
 ```
 
-**Option B — you already have a project (and probably your own `.claude/` folder): MERGE, don't replace.**
-Your project's `.claude/` and this repo's `.claude/` are the same kind of folder. Do NOT overwrite
-yours — copy the skill folders you want *into* it, side by side with your existing skills:
+Then put in your own key and clients (`.env.example`, `clients.example.json`): [full setup](apps/white-label-app/README.md#run-it-on-your-zernio-account).
+**The brand lives in one place:** `BRAND` at the top of [`views.js`](apps/white-label-app/views.js) (name, logo, accent colour). The demo agency is "Futuro Social"; swap in your own.
 
-```bash
-# from inside your project
-cp -r /path/to/zernio-library-skills/.claude/skills/* .claude/skills/
-```
+![The unified inbox, on demo data](apps/white-label-app/docs/screenshots/inbox.png)
 
-```powershell
-# Windows PowerShell
-Copy-Item -Recurse \path\to\zernio-library-skills\.claude\skills\* .claude\skills\
-```
+## The skills
 
-Result: `your-project/.claude/skills/` now contains your own skills **plus** `zernio-publish`,
-`zernio-comment-to-dm`, `meta-ads-launch`, `zernio-workflow-creator`, `zernio-voice-agent`, …
+| Skill | What it does |
+|---|---|
+| [`white-label-blueprint`](.claude/skills/white-label-blueprint/SKILL.md) | Build your own white-label social media tool: OAuth under your brand, a workspace per client, posting, webhooks, then the polish loop to product grade |
+| [`white-label-client-report`](.claude/skills/white-label-client-report/SKILL.md) | Add a client report with only your logo: organic and paid, response time, sentiment, client link and PDF |
+| [`zernio-inbox-integration`](.claude/skills/zernio-inbox-integration/SKILL.md) | Add Zernio's unified inbox (SMS, WhatsApp, Instagram, Messenger…) to an app you already have |
+| [`zernio-publish`](.claude/skills/zernio-publish/SKILL.md) | Publish one asset to 13 platforms with tailored captions, an approval gate and a check that it landed |
+| [`clip-machine`](.claude/skills/clip-machine/SKILL.md) | One long video in, native TikTok, Reels and Shorts posts out: cut, caption, cover, post |
+| [`zernio-comment-to-dm`](.claude/skills/zernio-comment-to-dm/SKILL.md) | Instagram and Facebook comment-to-DM automations and DM sequences, on command |
+| [`meta-ads-launch`](.claude/skills/meta-ads-launch/SKILL.md) | Launch a batch of Meta ads in one call, paused until you review them |
+| [`zernio-workflow-creator`](.claude/skills/zernio-workflow-creator/SKILL.md) | Build Zernio conversation workflows, including a 24/7 WhatsApp customer-service agent |
+| [`zernio-voice-agent`](.claude/skills/zernio-voice-agent/SKILL.md) | One WhatsApp number as an AI front desk: text replies plus inbound calls to a Retell AI voice agent |
+| [`skill-creator`](.claude/skills/skill-creator/SKILL.md) | Anthropic's official skill-creator, bundled for adding your own skills |
 
-**Verify it worked:** restart Claude Code in the project and the skills appear as slash commands —
-type `/` and you'll see them (e.g. `/zernio-publish`) — and they also auto-trigger when you just
-describe the task ("post this video to TikTok", "make my WhatsApp answer calls with AI"). If you
-don't see them, the folders are probably nested one level too deep: the check is that
-`.claude/skills/zernio-publish/SKILL.md` exists at exactly that path in YOUR project.
+New to a skill? `white-label-blueprint` and `clip-machine` each have an initiation prompt you paste into Claude Code in an empty folder ([blueprint](.claude/skills/white-label-blueprint/reference/initiation-prompt.md), [clip machine](.claude/skills/clip-machine/reference/initiation-prompt.md)).
 
-For claude.ai web (Skills upload UI), zip the skill folder yourself:
+## Videos
 
-```bash
-cd .claude/skills/zernio-publish && zip -r ../../../zernio-publish.skill.zip .
-```
+- **Part 1:** build a white-label social media app on Zernio: https://youtu.be/0FqJkCTCmMY
+- **Part 2:** the white-label client report: _link coming soon_ <!-- TODO: add the Part 2 YouTube link -->
 
-Then upload that ZIP on claude.ai → Capabilities → Skills.
+## Install the skills
 
-## Configure
+Claude Code loads any skill at `.claude/skills/<skill-name>/SKILL.md` in your project.
 
-Edit `.env` at the repo root, replace the placeholder with your real key from https://zernio.com/dashboard/api-keys, and run:
+- **Use this repo as your project:** `git clone` it, `cd` in, run `claude`.
+- **Add them to your own project:** copy the skill folders into your `.claude/skills/`, next to your own (merge, don't replace):
 
-```bash
-git update-index --skip-worktree .env
-```
+  ```bash
+  cp -r /path/to/zernio-library-skills/.claude/skills/* .claude/skills/
+  ```
 
-That keeps your local key edits from being staged into commits while the file stays tracked.
+  ```powershell
+  Copy-Item -Recurse \path\to\zernio-library-skills\.claude\skills\* .claude\skills\
+  ```
 
-## Use
+Restart Claude Code and type `/`: the skills show up (for example `/zernio-publish`), and they also trigger when you describe the task ("post this video to TikTok"). If not, check that `.claude/skills/zernio-publish/SKILL.md` exists at exactly that path. For claude.ai, zip a skill folder and upload it under Capabilities → Skills.
 
-In Claude Code, just say what you want to ship:
+**Your key:** put your key from https://zernio.com/dashboard/api-keys in `.env` at the repo root, then run `git update-index --skip-worktree .env` so it never gets committed. (The app has its own `.env`; see its README.)
 
-> "Publish this video to my YouTube, TikTok, and Reels: `./media/launch.mp4`"
->
-> "Drop a carousel post to Instagram and LinkedIn from this Drive folder: `<drive-url>`. Angle: three lessons from launching v1."
+## Requirements
 
-Claude reads the skill, runs through the workflow (intake → analyze → draft → convert → upload → package → approve → post → verify → log), shows you the full package, and ships on your approval.
+- [Claude Code](https://claude.com/claude-code) for the skills
+- A [Zernio](https://zernio.com) account and API key for anything live (the app's demo and tests need none)
+- Node.js 22.13 or newer for the app
 
-## What's in the box
+## How the skills work
 
-```
-zernio-library-skills/
-├── .claude/
-│   └── skills/
-│       ├── zernio-publish/                    ← the publishing skill
-│       │   ├── SKILL.md
-│       │   ├── reference/                       deep API + per-platform docs
-│       │   └── templates/manifest.json
-│       ├── zernio-comment-to-dm/              ← comment-to-DM automations + sequences
-│       │   ├── SKILL.md
-│       │   ├── reference/zernio-automations-api.md
-│       │   └── templates/automation.json
-│       ├── meta-ads-launch/                   ← Meta ad batches via Zernio's ads API
-│       │   ├── SKILL.md
-│       │   ├── reference/zernio-ads-api.md      the complete verified ads API reference
-│       │   └── templates/campaign-plan.json
-│       ├── zernio-workflow-creator/           ← Zernio Workflows + WhatsApp AI agents
-│       │   ├── SKILL.md
-│       │   ├── reference/zernio-workflows-api.md  full node/edge contract (16 node types)
-│       │   └── templates/whatsapp-customer-service-agent.json
-│       ├── zernio-voice-agent/                ← WhatsApp AI FRONT DESK (Zernio + Retell AI)
-│       │   ├── SKILL.md                          text + voice on one number, inbound-first
-│       │   ├── reference/whatsapp-calling-api.md  verified calling endpoints + gates + start_call
-│       │   ├── reference/retell-voice-api.md      Retell wiring (inbound_agents / SIP / wss)
-│       │   └── templates/
-│       │       ├── whatsapp-ai-front-desk.workflow.json  THE proven graph (text + tap-to-call)
-│       │       ├── whatsapp-voice-agent.workflow.json    outbound start_call variant
-│       │       ├── retell-voice-agent.base.md            fill-in-the-blank voice prompt
-│       │       └── retell-voice-agent.example.md         a filled voice prompt (booking)
-│       ├── white-label-client-report/         ← Part 2: the branded client report
-│       │   ├── SKILL.md                          the five checks + endpoints + honest limits
-│       │   ├── reference/stage-prompts.md        eight paste-ready prompts (organic, paid, community, sentiment, link + PDF, the look, polish)
-│       │   └── reference/design-system.md        the look: tokens, five patterns, where it applies
-│       ├── zernio-inbox-integration/          ← messaging + unified inbox in YOUR existing app
-│       │   ├── SKILL.md                          Map → Connect → Integrate → Verify
-│       │   ├── references/agent-brief.md         the agent brief + four paste-ready prompts
-│       │   ├── references/api-contracts.md       API contracts + pitfalls, audited vs the docs
-│       │   ├── references/claude-code-handoff.md the end-to-end testing handoff
-│       │   └── references/library-relationship.md how it relates to white-label-blueprint
-│       └── skill-creator/                     ← Anthropic's official skill-creator
-│                                                  bundled for when you add more skills
-├── .env                                       ← ZERNIO_API_KEY (placeholder until you fill it)
-├── CLAUDE.md                                  ← architectural map of the repo
-├── README.md
-├── LICENSE                                    ← MIT
-└── .gitignore
-```
+- **The skill informs, the agent acts.** A SKILL.md is knowledge plus a suggested workflow; Claude uses its own tools (bash, curl, ffmpeg, vision, web) to do the work.
+- **Approval before publish.** Anything that posts, sends or spends passes through your explicit yes.
+- **Verify, don't trust.** A 200 from the API isn't a post on the platform; the skills check that it landed.
 
-No build scripts, no helper scripts, no auto-generated artifacts. The agent has its native Claude Code toolkit (bash, curl, ffmpeg, vision, transcript extraction, web fetching) and uses those directly.
+## Contributing
 
-## Adding more skills to the library
+Issues and pull requests are welcome. To add a skill, create `.claude/skills/<your-skill>/SKILL.md` with `name` and `description` frontmatter; the bundled `skill-creator` helps you design and test it. For the app, run `npm test` before you open a pull request, and keep real keys, profile ids and account data out of commits.
 
-Drop a new folder under `.claude/skills/`:
+## Licence
 
-```bash
-mkdir .claude/skills/my-new-zernio-skill
-# Create SKILL.md with YAML frontmatter (name + description) and the skill's instructions
-```
-
-The bundled `skill-creator` at `.claude/skills/skill-creator/` is Anthropic's official tool for designing and improving skills — invoke it when building a new one.
-
-## Design principles
-
-- **End-to-end agency.** Claude handles intake, analysis, drafting, conversion, upload, posting, verification, logging. Not transport-only.
-- **The skill informs; the agent acts.** SKILL.md is reference knowledge plus a suggested workflow — not a script. The agent uses its native tools to execute.
-- **Approval before publish.** Every post passes through an explicit gate. No bypass, no auto-publish.
-- **Verify, don't trust.** Zernio's 200 OK ≠ landed on the platform. Claude hits each platform's public URL or oEmbed after `scheduledFor + 60s` and surfaces any field drift.
-- **Schedule, don't push.** Multi-platform posts always use `scheduledFor` 2-3 minutes ahead.
+[MIT](LICENSE)

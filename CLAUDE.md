@@ -50,6 +50,7 @@ zernio-library-skills/
 │       └── skill-creator/                     ← Anthropic's official skill-creator (bundled)
 │                                                  use this when adding more skills to the library
 │
+├── apps/white-label-app/                     ← the finished white-label app from the videos (Node 22.13+: npm ci, npm test, npm run demo)
 ├── .env                                       ← ZERNIO_API_KEY (placeholder by default; user fills in)
 ├── CLAUDE.md                                  ← this file
 ├── README.md

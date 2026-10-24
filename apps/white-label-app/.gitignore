@@ -1,0 +1,10 @@
+node_modules
+.env
+data/
+_polish/
+# Your real client list: copy clients.example.json to clients.json and fill it in.
+clients.json
+# Per-workspace key files (see keyFile in clients.example.json)
+keys/
+# Probe output can list every profile on your key; keep it local
+probe-*.json
