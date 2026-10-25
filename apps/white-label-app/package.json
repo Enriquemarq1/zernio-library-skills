@@ -1,13 +1,14 @@
 {
   "name": "white-label-app-zernio",
   "version": "1.0.0",
-  "description": "A white-label social media portal for agencies on Zernio's API: connections, posting, calendar, analytics, unified inbox and a branded client report.",
+  "description": "A white-label social media portal for agencies on Zernio's API: connections, posting, calendar, analytics, unified inbox, a branded client report and ManyChat-style automations.",
   "main": "server.js",
   "scripts": {
     "test": "node --test --test-concurrency=1 tests/*.test.mjs",
     "start": "node server.js",
     "dev": "node --env-file=.env server.js",
-    "demo": "node scripts/demo.mjs"
+    "demo": "node scripts/demo.mjs",
+    "demo:automations": "node scripts/demo-automations.mjs"
   },
   "keywords": [],
   "author": "",
@@ -15,7 +16,8 @@
   "type": "module",
   "dependencies": {
     "express": "^5.2.1",
-    "sentiment": "^5.0.2"
+    "sentiment": "^5.0.2",
+    "qrcode": "^1.5.4"
   },
   "engines": {
     "node": ">=22.13"

@@ -15,6 +15,8 @@ Turn a comment section into captured leads. When someone comments your **keyword
 post, Zernio auto-DMs them — and this skill lets you set that up just by *asking Claude*,
 for any post or keyword, in seconds. No dashboard clicking, no cloning workflows.
 
+> Want this inside your own app, for every client, with a builder and live activity? See [`white-label-automations`](../white-label-automations/SKILL.md) and the Automations tab in [`apps/white-label-app/`](../../../apps/white-label-app/).
+
 > **The skill informs; the agent acts.** This file gives Claude the Zernio API contract +
 > the recipe. Claude executes with `curl` (or the user's HTTP tool). Always confirm with the
 > user before creating/activating an automation (it goes live on a real audience).

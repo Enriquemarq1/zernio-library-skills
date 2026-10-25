@@ -8,6 +8,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fakeZernio } from '../tests/fake-zernio.mjs';
+import { fakeAutomations } from '../tests/fake-automations.mjs';
 
 const DAY = 864e5;
 const iso = (ms) => new Date(ms).toISOString();
@@ -170,6 +171,9 @@ const dailyData = Array.from({ length: 35 }, (_, i) => ({ date: date(Date.now() 
 
 const fake = fakeZernio(seed);
 const fakeBase = await fake.listen();
+// The Automations tab has its own fixture API (comment automations and workflows), on the same demo accounts.
+const autos = fakeAutomations({ accounts });
+const autoBase = await autos.listen();
 
 const send = (res, code, body) => { res.writeHead(code, { 'content-type': 'application/json' }); res.end(JSON.stringify(body)); };
 const front = createServer(async (req, res) => {
@@ -201,6 +205,12 @@ const front = createServer(async (req, res) => {
   }
   if (req.method === 'POST' && p === '/profiles') return send(res, 400, { error: 'Demo mode: add real clients with your own Zernio key (see README).' });
   if (p.startsWith('/connect')) return send(res, 400, { error: 'Demo mode: connecting accounts needs your own Zernio key (see README).' });
+
+  if (p.startsWith('/comment-automations') || p.startsWith('/workflows')) {
+    const r = await fetch(autoBase + p + url.search, { method: req.method, headers: { authorization: req.headers.authorization || '', 'content-type': 'application/json' }, body: ['GET', 'HEAD'].includes(req.method) ? undefined : body });
+    res.writeHead(r.status, { 'content-type': 'application/json' });
+    return res.end(await r.text());
+  }
 
   // Everything else goes to the test fixture API.
   const r = await fetch(fakeBase + p + url.search, { method: req.method, headers: { authorization: req.headers.authorization || '', 'content-type': 'application/json', ...(req.headers['idempotency-key'] ? { 'idempotency-key': req.headers['idempotency-key'] } : {}) }, body: ['GET', 'HEAD'].includes(req.method) ? undefined : body });

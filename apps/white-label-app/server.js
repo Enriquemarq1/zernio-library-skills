@@ -7,6 +7,7 @@ import { workspaceAccounts, accountIdOf, assertAccount, AccessDenied } from './i
 import { webhookHandler, drainEvents } from './inbox/webhooks.js';
 import inboxRoutes from './inbox/routes.js';
 import reportRoutes from './report/routes.js';
+import automationRoutes from './automations/routes.js';
 import { accountHealth } from './inbox/adapter.js';
 import { bindWorkspace, platformsOf } from './workspace.js';
 import {
@@ -47,7 +48,7 @@ const clients = () => {
 };
 const save = (list) => writeFileSync(FILE, JSON.stringify(list, null, 2) + '\n');
 // Every workspace route runs with that workspace's own key and platform list (workspace.js).
-app.use(['/w/:profileId', '/c/:profileId', '/connect/:profileId'], bindWorkspace(clients));
+app.use(['/w/:profileId', '/c/:profileId', '/connect/:profileId', '/api/w/:profileId'], bindWorkspace(clients));
 const PLATFORMS = [['instagram', 'Instagram'], ['tiktok', 'TikTok'], ['linkedin', 'LinkedIn']];
 const lastPost = new Map();
 const events = [];
@@ -698,6 +699,17 @@ reportRoutes(app, {
   workspaceShell,
   clientPage,
   v: { esc, icon, empty, BRAND },
+});
+
+/* --- Automations ------------------------------------------------------------ */
+// Comment-to-DM, followers only, story mentions, ref links: the ManyChat patterns on Zernio, plus the JSON
+// API the AI agent uses (/api). Lives in automations/.
+automationRoutes(app, {
+  clients,
+  findClient,
+  workspaceShell,
+  express,
+  v: { esc, note, empty, icon, plogo, platformName, ago, clock, num, plural, chip, copyField },
 });
 
 /* ============================================================ agency dashboard */

@@ -26,8 +26,9 @@ The Zernio MCP server gives AI agents like Claude, Cursor and Codex the same acc
 
 | You want to… | Go to |
 |---|---|
-| **Build your own white-label app**, step by step, with Claude Code | [`white-label-blueprint`](.claude/skills/white-label-blueprint/SKILL.md) (Part 1: your brand, client workspaces, posting), then [`white-label-client-report`](.claude/skills/white-label-client-report/SKILL.md) (Part 2: the branded client report) |
+| **Build your own white-label app**, step by step, with Claude Code | [`white-label-blueprint`](.claude/skills/white-label-blueprint/SKILL.md) (Part 1: your brand, client workspaces, posting), then [`white-label-client-report`](.claude/skills/white-label-client-report/SKILL.md) (Part 2: the branded client report), then [`white-label-automations`](.claude/skills/white-label-automations/SKILL.md) (Part 3: your own ManyChat) |
 | **Clone the finished app** and make it yours | [`apps/white-label-app/`](apps/white-label-app/) |
+| **Your own ManyChat** for every client: comment-to-DM, followers only, story mentions, QR codes, run by your AI agent too | The Automations tab in [`apps/white-label-app/`](apps/white-label-app/docs/automations/README.md), or [`white-label-automations`](.claude/skills/white-label-automations/SKILL.md) to add it to your own app |
 | Use a single skill (publish, inbox, ads, automations) | [The skills](#the-skills) |
 
 ## The app
@@ -41,9 +42,12 @@ The Zernio MCP server gives AI agents like Claude, Cursor and Codex the same acc
 | **Calendar** | The month of scheduled and published posts |
 | **Analytics** | Per-platform breakdown, latest posts, best time to post |
 | **Inbox** | One conversation list across channels, replies, webhooks |
+| **Automations** | Your own ManyChat: comment-to-DM with buttons and a public reply, rewards only followers unlock (one-tap confirm), story-mention thank-yous, links and QR codes, repeat rules and a live activity log, with an iPhone + Instagram preview. Your AI agent runs it too (MCP tools) |
 | **Report** | Organic and paid side by side, inbox response time, comment sentiment, a branded client link and a PDF, with a "Show spend" switch |
 
 ![The client report, on demo data](apps/white-label-app/docs/screenshots/report.png)
+
+![The Automations tab: a followers-only reward with its iPhone + Instagram preview, on demo data](apps/white-label-app/docs/screenshots/automations.png)
 
 **Quickstart: see it in a minute, no Zernio account needed**
 
@@ -52,7 +56,7 @@ git clone https://github.com/Enriquemarq1/zernio-library-skills.git
 cd zernio-library-skills/apps/white-label-app
 npm ci
 npm run demo      # three made-up clients on a local fake API → http://127.0.0.1:3000
-npm test          # 45 tests, never the real API
+npm test          # 61 tests, never the real API
 ```
 
 Then put in your own key and clients (`.env.example`, `clients.example.json`): [full setup](apps/white-label-app/README.md#run-it-on-your-zernio-account).
@@ -66,6 +70,7 @@ Then put in your own key and clients (`.env.example`, `clients.example.json`): [
 |---|---|
 | [`white-label-blueprint`](.claude/skills/white-label-blueprint/SKILL.md) | Build your own white-label social media tool: OAuth under your brand, a workspace per client, posting, webhooks, then the polish loop to product grade |
 | [`white-label-client-report`](.claude/skills/white-label-client-report/SKILL.md) | Add a client report with only your logo: organic and paid, response time, sentiment, client link and PDF |
+| [`white-label-automations`](.claude/skills/white-label-automations/SKILL.md) | Add your own ManyChat to your app: comment-to-DM, followers only, story mentions, QR codes, repeat rules, live activity, and the same actions as tools for your AI agent |
 | [`zernio-inbox-integration`](.claude/skills/zernio-inbox-integration/SKILL.md) | Add Zernio's unified inbox (SMS, WhatsApp, Instagram, Messenger…) to an app you already have |
 | [`zernio-publish`](.claude/skills/zernio-publish/SKILL.md) | Publish one asset to 13 platforms with tailored captions, an approval gate and a check that it landed |
 | [`clip-machine`](.claude/skills/clip-machine/SKILL.md) | One long video in, native TikTok, Reels and Shorts posts out: cut, caption, cover, post |
@@ -81,6 +86,7 @@ New to a skill? `white-label-blueprint` and `clip-machine` each have an initiati
 
 - **Part 1:** build a white-label social media app on Zernio: https://youtu.be/0FqJkCTCmMY
 - **Part 2:** the white-label client report: _link coming soon_ <!-- TODO: add the Part 2 YouTube link -->
+- **Part 3:** your own ManyChat, the Automations tab: _link coming soon_ <!-- TODO: add the Part 3 YouTube link -->
 
 ## Install the skills
 

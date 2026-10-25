@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "futuro-automations": {
+      "command": "node",
+      "args": ["mcp/automations-mcp.mjs"],
+      "env": { "PORTAL_URL": "http://127.0.0.1:3000" }
+    }
+  }
+}

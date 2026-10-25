@@ -92,6 +92,7 @@ const I = {
   video: '<rect x="2.5" y="5.5" width="12" height="11" rx="1.5"/><path d="m14.5 9.5 5-3v9l-5-3Z"/>',
   ads: '<path d="M3.5 9v4h3l6 4V5l-6 4Z"/><path d="M16 8.5a3.5 3.5 0 0 1 0 5M18.5 6a7 7 0 0 1 0 10"/>',
   clock: '<circle cx="11" cy="11" r="8"/><path d="M11 6.5V11l3 2"/>',
+  flow: '<rect x="3" y="3.5" width="7" height="5" rx="1.2"/><rect x="12" y="13.5" width="7" height="5" rx="1.2"/><path d="M6.5 8.5v3.5a1.5 1.5 0 0 0 1.5 1.5h4"/>',
 };
 export const icon = (name, size = 18) =>
   `<svg width="${size}" height="${size}" viewBox="0 0 22 22" fill="none" stroke="currentColor"
@@ -119,6 +120,7 @@ export const WORKSPACE_TABS = [
   ['calendar', 'Calendar', 'cal'],
   ['analytics', 'Analytics', 'chart'],
   ['inbox', 'Inbox', 'inbox'],
+  ['automations', 'Automations', 'flow'],
   ['report', 'Report', 'report'],
 ];
 
